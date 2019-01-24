@@ -1,4 +1,4 @@
-# vector.py
+# math3d_vector.py
 
 import math
 
@@ -7,6 +7,9 @@ class Vector(object):
         self.x = x
         self.y = y
         self.z = z
+
+    def clone(self):
+        return Vector(self.x, self.y, self.z)
 
     def __add__(self, other):
         return Vector(self.x + other.x, self.y + other.y, self.z + other.z)

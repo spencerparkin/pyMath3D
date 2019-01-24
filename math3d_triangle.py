@@ -23,6 +23,12 @@ class Triangle(object):
         area_c = Triangle(point. self.point_c, self.point_a).area()
         return math.abs((area_a + area_b + area_c) - self.area()) < eps
 
+    def contains_edge_point(self, point, eps=1e-7):
+        return any([line_segment.contains_point(point, eps) for line_segment in self.yield_line_segments()])
+
+    def contains_interior_point(self, point, eps=1e-7):
+        return self.contains_point(point, eps) and not self.contains_edge_point(point, eps)
+
     def yield_line_segments(self):
         yield LineSegment(self.point_a, self.point_b)
         yield LineSegment(self.point_b, self.point_c)
@@ -34,9 +40,11 @@ class Triangle(object):
     def area(self):
         return (self.point_b - self.point_a).cross(self.point_c - self.point_a).length() / 2.0
 
-    def intersect_with(self, other):
+    def __getitem__(self, i):
+        return [self.point_a, self.point_b, self.point_c][i % 3]
+
+    def cut_against(self, other):
         if isinstance(other, Triangle):
-            # Though the intersection of a triangle with itself is itself, we are not
-            # interested in this or similar cases.  We are only interested in the case
-            # where the intersection is a non-generate line-segment.
+            pass # TODO: Return split_list.
+        elif isinstance(other, Plane):
             pass

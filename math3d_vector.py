@@ -59,3 +59,25 @@ class Vector(object):
         radius = rejection.length()
         rejection = x_axis * radius * math.cos(angle) + y_axis * radius * math.sin(angle)
         return projection + rejection
+    
+    def __hash__(self):
+        return hash(str(self))
+    
+    def __str__(self):
+        return '(%f,%f,%f)' % (self.x, self.y, self.z)
+    
+    def sign_permute(self):
+        vector_set = set()
+        for i in range(2):
+            for j in range(2):
+                for k in range(2):
+                    vector = self.clone()
+                    if i % 2 == 0:
+                        vector.x *= -1.0
+                    if j % 2 == 0:
+                        vector.y *= -1.0
+                    if k % 2 == 0:
+                        vector.z *= -1.0
+                    vector_set.add(vector)
+        for vector in vector_set:
+            yield vector

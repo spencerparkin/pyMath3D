@@ -137,3 +137,17 @@ class TriangleMesh(object):
             error = None
         finally:
             glEnd()
+    
+    def render_normals(self, length=1.0):
+        from OpenGL.GL import GL_LINES, glBegin, glEnd, glVertex3f
+        
+        glBegin(GL_LINES)
+        try:
+            for triangle in self.yield_triangles():
+                plane = triangle.calc_plane()
+                center = triangle.calc_center()
+                tip = center + plane.unit_normal * length
+                glVertex3f(center.x, center.y, center.z)
+                glVertex3f(tip.x, tip.y, tip.z)
+        finally:
+            glEnd()

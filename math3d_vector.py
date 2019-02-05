@@ -26,6 +26,12 @@ class Vector(object):
     def __rmul__(self, other):
         return self.__mul__(other)
 
+    def __truediv__(self, other):
+        if isinstance(other, float):
+            return Vector(self.x / other, self.y / other, self.z / other)
+        elif isinstance(other, Vector):
+            return Vector(self.x / other.x, self.y / other.y, self.z / other.z)
+
     def dot(self, other):
         return self.x * other.x + self.y * other.y + self.z * other.z
 

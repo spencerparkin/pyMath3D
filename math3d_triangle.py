@@ -19,6 +19,9 @@ class Triangle(object):
         unit_normal = (self.point_b - self.point_a).cross(self.point_c - self.point_a).normalized()
         return Plane(self.point_a, unit_normal)
 
+    def calc_center(self):
+        return (self.point_a + self.point_b + self.point_c) / 3.0
+
     def contains_point(self, point, eps=1e-7):
         if not self.calc_plane().contains_point(point, eps):
             return False

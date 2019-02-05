@@ -22,6 +22,9 @@ class Window(QtGui.QOpenGLWindow):
         transform = AffineTransform(translation=Vector(1.0, 0.0, 0.0))
         self.tri_mesh_b = transform(self.tri_mesh_b)
         
+        self.back_mesh = None
+        self.front_mesh = None
+        
         self.orient = Vector(0.0, 0.0, 0.0)
         self.dragging_mouse = False
         self.drag_pos = None
@@ -57,7 +60,7 @@ class Window(QtGui.QOpenGLWindow):
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(80.0, aspect_ratio, 0.1, 1000.0)
+        gluPerspective(60.0, aspect_ratio, 0.1, 1000.0)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
@@ -73,13 +76,25 @@ class Window(QtGui.QOpenGLWindow):
         glMaterialfv(GL_FRONT, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
         glMaterialfv(GL_FRONT, GL_SHININESS, [30.0])
 
-        glMaterialfv(GL_FRONT, GL_AMBIENT, [0.3, 0.0, 0.0, 1.0])
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, [1.0, 0.0, 0.0, 1.0])
-        self.tri_mesh_a.render()
+        if self.back_mesh is not None:
+            glMaterialfv(GL_FRONT, GL_AMBIENT, [0.0, 0.3, 0.3, 1.0])
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.0, 1.0, 1.0, 1.0])
+            self.back_mesh.render()
 
-        glMaterialfv(GL_FRONT, GL_AMBIENT, [0.0, 0.3, 0.0, 0.3])
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.0, 1.0, 0.0, 0.3])
-        self.tri_mesh_b.render()
+        if self.front_mesh is not None:
+            glMaterialfv(GL_FRONT, GL_AMBIENT, [0.3, 0.3, 0.0, 1.0])
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, [1.0, 1.0, 0.0, 1.0])
+            self.front_mesh.render()
+
+        if self.tri_mesh_a is not None:
+            glMaterialfv(GL_FRONT, GL_AMBIENT, [0.3, 0.0, 0.0, 1.0])
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, [1.0, 0.0, 0.0, 1.0])
+            self.tri_mesh_a.render()
+
+        if self.tri_mesh_b is not None:
+            glMaterialfv(GL_FRONT, GL_AMBIENT, [0.0, 0.3, 0.0, 0.3])
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.0, 1.0, 0.0, 0.3])
+            self.tri_mesh_b.render()
         
         glPopMatrix()
 
@@ -115,6 +130,15 @@ class Window(QtGui.QOpenGLWindow):
         zoom_factor = 0.5
         self.zoom += delta * zoom_factor
         self.update()
+    
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_F1:
+            if self.tri_mesh_a is not None and self.tri_mesh_b is not None:
+                self.back_mesh, self.front_mesh = self.tri_mesh_a.split_against_mesh(self.tri_mesh_b)
+                self.tri_mesh_a = None
+                #self.tri_mesh_b = None
+                self.back_mesh = None
+                self.update()
 
 def exceptionHook(cls, exc, tb):
     sys.__excepthook__(cls, exc, tb)

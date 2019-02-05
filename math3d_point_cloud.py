@@ -16,9 +16,9 @@ class PointCloud(object):
                     point_c = self.point_list[k]
                     for l in range(k + 1, len(self.point_list)):
                         point_d = self.point_list[l]
-                        vec_a = point_d - point_a
-                        vec_b = point_d - point_b
-                        vec_c = point_d - point_c
+                        vec_a = point_a - point_d
+                        vec_b = point_b - point_d
+                        vec_c = point_c - point_d
                         volume = vec_a.cross(vec_b).dot(vec_c)
                         if volume > 0.0:
                             return [

@@ -56,7 +56,7 @@ class Triangle(object):
         
             triangle = triangle_list.pop(0)
         
-            side_list = [plane.side(triangle[i]) for i in range(3)]
+            side_list = [plane.side(triangle[i], eps) for i in range(3)]
             if all([side == Side.NEITHER for side in side_list]):
                 pass
             elif all([side == Side.BACK or side == Side.NEITHER for side in side_list]):

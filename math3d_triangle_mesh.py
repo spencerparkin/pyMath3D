@@ -52,11 +52,11 @@ class TriangleMesh(object):
         self.triangle_list.append(new_triangle)
     
     def find_or_add_vertex(self, new_point, eps=1e-7):
-        for i, point in enumerate(self.point_list):
+        for i, point in enumerate(self.vertex_list):
             if (point - new_point).length() < eps:
                 return i
-        self.point_list.append(new_point)
-        return len(self.point_list) - 1
+        self.vertex_list.append(new_point)
+        return len(self.vertex_list) - 1
     
     def side(self, point, eps=1e-7):
         # Assuming this mesh to be a convex hull, tell us which side the given point is on.
@@ -101,22 +101,39 @@ class TriangleMesh(object):
         phi = (1.0 + 5.0 ** 0.5) / 2.0
         
         if polyhedron == Polyhedron.TETRAHEDRON:
-            point_cloud.point_list = [point for point in Vector(1.0, 0.0, 1.0 / math.sqrt(2.0)).sign_permute()]
-            point_cloud.point_list += [point for point in Vector(0.0, 1.0, 1.0 / math.sqrt(2.0)).sign_permute()]
-        elif polyhedron == Polyhedron.HEXADRON:
+            point_cloud.point_list = [point for point in Vector(1.0, 0.0, -1.0 / math.sqrt(2.0)).sign_permute(True, False, False)]
+            point_cloud.point_list += [point for point in Vector(0.0, 1.0, 1.0 / math.sqrt(2.0)).sign_permute(False, True, False)]
+        elif polyhedron == Polyhedron.HEXAHEDRON:
             point_cloud.point_list = [point for point in Vector(1.0, 1.0, 1.0).sign_permute()]
         elif polyhedron == Polyhedron.ICOSAHEDRON:
-            point_cloud.point_list = [point for point in Vector(0.0, 1.0, phi).sign_permute()]
-            point_cloud.point_list += [point for point in Vector(phi, 0.0, 1.0).sign_permute()]
-            point_cloud.point_list += [point for point in Vector(1.0, phi, 0.0).sign_permute()]
+            point_cloud.point_list = [point for point in Vector(0.0, 1.0, phi).sign_permute(False, True, True)]
+            point_cloud.point_list += [point for point in Vector(phi, 0.0, 1.0).sign_permute(True, False, True)]
+            point_cloud.point_list += [point for point in Vector(1.0, phi, 0.0).sign_permute(True, True, False)]
         elif polyhedron == Polyhedron.DODECAHEDRON:
             point_cloud.point_list = [point for point in Vector(1.0, 1.0, 1.0).sign_permute()]
-            point_cloud.point_list += [point for point in Vector(0.0, phi, 1.0 / phi).sign_permute()]
-            point_cloud.point_list += [point for point in Vector(1.0 / phi, 0.0, phi).sign_permute()]
-            point_cloud.point_list += [point for point in Vector(phi, 1.0 / phi, 0.0).sign_permute()]
+            point_cloud.point_list += [point for point in Vector(0.0, phi, 1.0 / phi).sign_permute(False, True, True)]
+            point_cloud.point_list += [point for point in Vector(1.0 / phi, 0.0, phi).sign_permute(True, False, True)]
+            point_cloud.point_list += [point for point in Vector(phi, 1.0 / phi, 0.0).sign_permute(True, True, False)]
         elif polyhedron == Polyhedron.ICOSIDODECAHEDRON:
-            point_cloud.point_list = [point for point in Vector(0.0, 0.0, phi).sign_permute()]
+            point_cloud.point_list = [point for point in Vector(0.0, 0.0, phi).sign_permute(False, False, True)]
             point_cloud.point_list += [point for point in Vector(0.5, phi / 2.0, phi * phi / 2.0).sign_permute()]
         
         triangle_list = point_cloud.find_convex_hull()
         return self.from_triangle_list(triangle_list)
+    
+    def render(self):
+        from OpenGL.GL import GL_TRIANGLES, glBegin, glEnd, glVertex3f, glNormal3f
+        
+        glBegin(GL_TRIANGLES)
+        try:
+            for triangle in self.yield_triangles():
+                plane = triangle.calc_plane()
+                glNormal3f(plane.unit_normal.x, plane.unit_normal.y, plane.unit_normal.z)
+                glVertex3f(triangle.point_a.x, triangle.point_a.y, triangle.point_a.z)
+                glVertex3f(triangle.point_b.x, triangle.point_b.y, triangle.point_b.z)
+                glVertex3f(triangle.point_c.x, triangle.point_c.y, triangle.point_c.z)
+        except Exception as ex:
+            error = str(ex)
+            error = None
+        finally:
+            glEnd()

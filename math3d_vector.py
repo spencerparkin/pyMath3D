@@ -18,10 +18,13 @@ class Vector(object):
         return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def __mul__(self, other):
-        return Vector(self.x * other, self.y * other, self.z * other)
+        if isinstance(other, float):
+            return Vector(self.x * other, self.y * other, self.z * other)
+        elif isinstance(other, Vector):
+            return Vector(self.x * other.x, self.y * other.y, self.z * other.z)
 
     def __rmul__(self, other):
-        return Vector(self.x * other, self.y * other, self.z * other)
+        return self.__mul__(other)
 
     def dot(self, other):
         return self.x * other.x + self.y * other.y + self.z * other.z
@@ -64,20 +67,22 @@ class Vector(object):
         return hash(str(self))
     
     def __str__(self):
-        return '(%f,%f,%f)' % (self.x, self.y, self.z)
+        return '(%f, %f, %f)' % (self.x, self.y, self.z)
     
-    def sign_permute(self):
-        vector_set = set()
-        for i in range(2):
-            for j in range(2):
-                for k in range(2):
-                    vector = self.clone()
-                    if i % 2 == 0:
-                        vector.x *= -1.0
-                    if j % 2 == 0:
-                        vector.y *= -1.0
-                    if k % 2 == 0:
-                        vector.z *= -1.0
-                    vector_set.add(vector)
-        for vector in vector_set:
-            yield vector
+    def __eq__(self, other):
+        if self.x != other.x:
+            return False
+        if self.y != other.y:
+            return False
+        if self.z != other.z:
+            return False
+        return True
+    
+    def sign_permute(self, flip_x=True, flip_y=True, flip_z=True):
+        x_list = [1.0, -1.0] if flip_x else [1.0]
+        y_list = [1.0, -1.0] if flip_y else [1.0]
+        z_list = [1.0, -1.0] if flip_z else [1.0]
+        for x_scale in x_list:
+            for y_scale in y_list:
+                for z_scale in z_list:
+                    yield Vector(x_scale, y_scale, z_scale) * self

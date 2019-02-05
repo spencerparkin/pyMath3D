@@ -41,11 +41,12 @@ class PointCloud(object):
                 point = point_list[i]
                 for triangle in triangle_list:
                     plane = triangle.calc_plane()
-                    if plane.side(point) != Side.FRONT:
-                        del point_list[i]
+                    side = plane.side(point)
+                    if side == Side.FRONT:
+                        i += 1
                         break
                 else:
-                    i += 1
+                    del point_list[i]
             
             # We're done when all points have been incorporated into the hull.
             if len(point_list) == 0:
@@ -59,22 +60,27 @@ class PointCloud(object):
             while i < len(triangle_list):
                 triangle = triangle_list[i]
                 plane = triangle.calc_plane()
-                if plane.side(new_point) == Side.FRONT:
+                side = plane.side(new_point)
+                if side == Side.FRONT:
                     del triangle_list[i]
                 else:
                     i += 1
             
             # Add triangles involving the new point whose plane does not split the current hull.
+            # Note that this works, but it is very slow.
             new_triangle_list = []
             for triangle in triangle_list:
                 for line_segment in triangle.yield_line_segments():
                     new_triangle = Triangle(new_point, line_segment.point_b, line_segment.point_a)
-                    plane = new_point.calc_plane()
+                    plane = new_triangle.calc_plane()
                     for i in range(len(triangle_list)):
-                        for k in range(3):
+                        k = 0
+                        while k < 3:
                             point = triangle_list[i][k]
-                            if plane.side(point) == Side.FRONT:
+                            side = plane.side(point)
+                            if side == Side.FRONT:
                                 break
+                            k += 1
                         if k < 3:
                             break
                     else:

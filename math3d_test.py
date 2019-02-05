@@ -13,7 +13,7 @@ class Window(QtGui.QOpenGLWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        self.tri_mesh = TriangleMesh().make_polyhedron(Polyhedron.TETRAHEDRON)
+        self.tri_mesh = TriangleMesh().make_polyhedron(Polyhedron.DODECAHEDRON)
         
         self.orient = Vector(0.0, 0.0, 0.0)
         self.dragging_mouse = False

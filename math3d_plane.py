@@ -17,7 +17,7 @@ class Plane(object):
         distance = self.point_distance(point)
         if distance >= eps:
             return Side.FRONT
-        elif distance <= eps:
+        elif distance <= -eps:
             return Side.BACK
         return Side.NEITHER
 

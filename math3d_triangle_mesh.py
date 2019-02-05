@@ -27,12 +27,12 @@ class TriangleMesh(object):
         new_mesh.triangle_list = [triangle for triangle in self.triangle_list]
         return new_mesh
     
+    def valid_offset(self, i):
+        return True if 0 <= i < len(self.vertex_list) else False
+    
     def yield_triangles(self):
         for triangle in self.triangle_list:
-            point_a = self.vertex_list[triangle[0]]
-            point_b = self.vertex_list[triangle[1]]
-            point_c = self.vertex_list[triangle[2]]
-            yield Triangle(point_a, point_b, point_c)
+            yield self.make_triangle(triangle)
     
     def to_triangle_list(self):
         return [triangle for triangle in self.yield_triangles()]
@@ -44,12 +44,44 @@ class TriangleMesh(object):
         return self
     
     def add_triangle(self, triangle):
-        new_triangle = (
-            self.find_or_add_vertex(triangle.point_a),
-            self.find_or_add_vertex(triangle.point_b),
-            self.find_or_add_vertex(triangle.point_c)
-        )
-        self.triangle_list.append(new_triangle)
+        if isinstance(triangle, tuple):
+            assert(all([self.valid_offset(triangle[i]) for i in range(3)]))
+            self.triangle_list.append(triangle)
+        elif isinstance(triangle, Triangle):
+            new_triangle = (
+                self.find_or_add_vertex(triangle.point_a),
+                self.find_or_add_vertex(triangle.point_b),
+                self.find_or_add_vertex(triangle.point_c)
+            )
+            self.triangle_list.append(new_triangle)
+    
+    def find_triangle(self, triangle, check_forward=True, check_reverse=False):
+        triple_list = []
+        if check_forward:
+            triple_list.append(triangle)
+        if check_reverse:
+            triple_list.append((triangle[2], triangle[1], triangle[0]))
+        for i, existing_triangle in enumerate(self.triangle_list):
+            for triple in triple_list:
+                if existing_triangle == triple:
+                    return i
+                if existing_triangle == (triple[1], triple[2], triple[0]):
+                    return i
+                if existing_triangle == (triple[2], triple[0], triple[1]):
+                    return i
+    
+    def toggle_triangle(self, triangle, check_forward=True, check_reverse=False):
+        i = self.find_triangle(triangle, check_forward=check_forward, check_reverse=check_reverse)
+        if i is not None:
+            del self.triangle_list[i]
+        else:
+            self.add_triangle(triangle)
+    
+    def make_triangle(self, triangle):
+        point_a = self.vertex_list[triangle[0]]
+        point_b = self.vertex_list[triangle[1]]
+        point_c = self.vertex_list[triangle[2]]
+        return Triangle(point_a, point_b, point_c)
     
     def find_or_add_vertex(self, new_point, eps=1e-7):
         for i, point in enumerate(self.vertex_list):
@@ -63,8 +95,9 @@ class TriangleMesh(object):
         for triangle in self.yield_triangles():
             plane = triangle.calc_plane()
             side = plane.side(point, eps)
-            if side == Side.FRONT or side == Side.NEITHER:
+            if side == Side.FRONT:
                 return Side.FRONT
+        # It could also be on the mesh, but let's just do this for now.
         return Side.BACK
     
     def split_against_mesh(self, tri_mesh):
@@ -115,11 +148,14 @@ class TriangleMesh(object):
             point_cloud.point_list += [point for point in Vector(1.0 / phi, 0.0, phi).sign_permute(True, False, True)]
             point_cloud.point_list += [point for point in Vector(phi, 1.0 / phi, 0.0).sign_permute(True, True, False)]
         elif polyhedron == Polyhedron.ICOSIDODECAHEDRON:
-            point_cloud.point_list = [point for point in Vector(0.0, 0.0, phi).sign_permute(False, False, True)]
+            point_cloud.point_list = [point for point in Vector(phi, 0.0, 0.0).sign_permute(True, False, False)]
+            point_cloud.point_list += [point for point in Vector(0.0, phi, 0.0).sign_permute(False, True, False)]
+            point_cloud.point_list += [point for point in Vector(0.0, 0.0, phi).sign_permute(False, False, True)]
             point_cloud.point_list += [point for point in Vector(0.5, phi / 2.0, phi * phi / 2.0).sign_permute()]
+            point_cloud.point_list += [point for point in Vector(phi * phi / 2.0, 0.5, phi / 2.0).sign_permute()]
+            point_cloud.point_list += [point for point in Vector(phi / 2.0, phi * phi / 2.0, 0.5).sign_permute()]
         
-        triangle_list = point_cloud.find_convex_hull()
-        return self.from_triangle_list(triangle_list)
+        return point_cloud.find_convex_hull()
     
     def render(self):
         from OpenGL.GL import GL_TRIANGLES, glBegin, glEnd, glVertex3f, glNormal3f

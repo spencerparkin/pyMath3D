@@ -29,7 +29,10 @@ class PointCloud(object):
                             ]
     
     def find_convex_hull(self):
+        from math3d_triangle_mesh import TriangleMesh
+        
         triangle_list = self._find_initial_tetrahedron_for_convex_hull()
+        tri_mesh = TriangleMesh().from_triangle_list(triangle_list)
         
         # Proceed by expanding the current convex hull until all points have been incorporated.
         point_list = [point for point in self.point_list]
@@ -39,14 +42,10 @@ class PointCloud(object):
             i = 0
             while i < len(point_list):
                 point = point_list[i]
-                for triangle in triangle_list:
-                    plane = triangle.calc_plane()
-                    side = plane.side(point)
-                    if side == Side.FRONT:
-                        i += 1
-                        break
-                else:
+                if tri_mesh.side(point) == Side.BACK:
                     del point_list[i]
+                else:
+                    i += 1
             
             # We're done when all points have been incorporated into the hull.
             if len(point_list) == 0:
@@ -54,41 +53,23 @@ class PointCloud(object):
             
             # Arbitrarily choose the first point in the list.  We know it is outside the hull.
             new_point = point_list[0]
+            tri_mesh.vertex_list.append(new_point)
+            i = len(tri_mesh.vertex_list) - 1
             
-            # Remove any triangles from our current hull that face the chosen point.
-            i = 0
-            while i < len(triangle_list):
-                triangle = triangle_list[i]
+            # Build upon any triangles that face toward our new point.
+            triangle_list = [triangle for triangle in tri_mesh.triangle_list]
+            for triple in triangle_list:
+                triangle = tri_mesh.make_triangle(triple)
                 plane = triangle.calc_plane()
                 side = plane.side(new_point)
                 if side == Side.FRONT:
-                    del triangle_list[i]
-                else:
-                    i += 1
-            
-            # Add triangles involving the new point whose plane does not split the current hull.
-            # Note that this works, but it is very slow.
-            new_triangle_list = []
-            for triangle in triangle_list:
-                for line_segment in triangle.yield_line_segments():
-                    new_triangle = Triangle(new_point, line_segment.point_b, line_segment.point_a)
-                    plane = new_triangle.calc_plane()
-                    for i in range(len(triangle_list)):
-                        k = 0
-                        while k < 3:
-                            point = triangle_list[i][k]
-                            side = plane.side(point)
-                            if side == Side.FRONT:
-                                break
-                            k += 1
-                        if k < 3:
-                            break
-                    else:
-                        new_triangle_list.append(new_triangle)
-            triangle_list += new_triangle_list
+                    tri_mesh.toggle_triangle(triple, check_forward=True, check_reverse=False)
+                    tri_mesh.toggle_triangle((i, triple[0], triple[1]), check_forward=False, check_reverse=True)
+                    tri_mesh.toggle_triangle((i, triple[1], triple[2]), check_forward=False, check_reverse=True)
+                    tri_mesh.toggle_triangle((i, triple[2], triple[0]), check_forward=False, check_reverse=True)
         
-        # Finally, return the convex hull as a list of triangles.
-        return triangle_list
+        # Finally, return the convex hull.
+        return tri_mesh
     
     def fit_plane(self):
-        pass
+        pass # TODO: Use least-squares method.  This will require solving a system of linear equations.

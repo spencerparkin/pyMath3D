@@ -6,14 +6,21 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from PyQt5 import QtGui, QtCore, QtWidgets
 from math3d_triangle_mesh import TriangleMesh, Polyhedron
-from math3d_triangle import Triangle
 from math3d_vector import Vector
+from math3d_transform import AffineTransform
 
 class Window(QtGui.QOpenGLWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        self.tri_mesh = TriangleMesh().make_polyhedron(Polyhedron.ICOSIDODECAHEDRON)
+        self.tri_mesh_a = TriangleMesh().make_polyhedron(Polyhedron.ICOSAHEDRON)
+        self.tri_mesh_b = TriangleMesh().make_polyhedron(Polyhedron.HEXAHEDRON)
+
+        transform = AffineTransform(translation=Vector(-1.0, 0.0, 0.0))
+        self.tri_mesh_a = transform(self.tri_mesh_a)
+
+        transform = AffineTransform(translation=Vector(1.0, 0.0, 0.0))
+        self.tri_mesh_b = transform(self.tri_mesh_b)
         
         self.orient = Vector(0.0, 0.0, 0.0)
         self.dragging_mouse = False
@@ -30,8 +37,14 @@ class Window(QtGui.QOpenGLWindow):
         glShadeModel(GL_SMOOTH)
                      
         glLightfv(GL_LIGHT0, GL_POSITION, [1.0, 1.0, 1.0, 0.0])
-        glLightfv(GL_LIGHT0, GL_AMBIENT, [0.7, 0.7, 0.7, 1.0])
+        glLightfv(GL_LIGHT0, GL_AMBIENT, [1.0, 1.0, 1.0, 1.0])
         glLightfv(GL_LIGHT0, GL_DIFFUSE, [1.0, 1.0, 1.0, 1.0])
+        
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_BACK)
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -58,16 +71,15 @@ class Window(QtGui.QOpenGLWindow):
         glEnable(GL_LIGHTING)
         
         glMaterialfv(GL_FRONT, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
-        glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
+        glMaterialfv(GL_FRONT, GL_SHININESS, [30.0])
+
+        glMaterialfv(GL_FRONT, GL_AMBIENT, [0.3, 0.0, 0.0, 1.0])
         glMaterialfv(GL_FRONT, GL_DIFFUSE, [1.0, 0.0, 0.0, 1.0])
-        glMaterialfv(GL_FRONT, GL_SHININESS, [50.0])
-        
-        self.tri_mesh.render()
-        
-        glDisable(GL_LIGHTING)
-        glColor3f(0.0, 1.0, 0.0)
-        
-        self.tri_mesh.render_normals()
+        self.tri_mesh_a.render()
+
+        glMaterialfv(GL_FRONT, GL_AMBIENT, [0.0, 0.3, 0.0, 0.3])
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.0, 1.0, 0.0, 0.3])
+        self.tri_mesh_b.render()
         
         glPopMatrix()
 
@@ -89,7 +101,7 @@ class Window(QtGui.QOpenGLWindow):
             self.drag_pos = pos
             sensativity_factor = 2.0
             self.orient.x += sensativity_factor * float(delta.y())
-            self.orient.y += sensativity_factor * -float(delta.x())
+            self.orient.y += sensativity_factor * float(delta.x())
             self.update()
         
     def mouseReleaseEvent(self, event):

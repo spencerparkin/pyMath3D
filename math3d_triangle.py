@@ -26,9 +26,9 @@ class Triangle(object):
         if not self.calc_plane().contains_point(point, eps):
             return False
         area_a = Triangle(point, self.point_a, self.point_b).area()
-        area_b = Triangle(point, self.poitn_b, self.point_c).area()
-        area_c = Triangle(point. self.point_c, self.point_a).area()
-        return math.abs((area_a + area_b + area_c) - self.area()) < eps
+        area_b = Triangle(point, self.point_b, self.point_c).area()
+        area_c = Triangle(point, self.point_c, self.point_a).area()
+        return math.fabs((area_a + area_b + area_c) - self.area()) < eps
 
     def contains_edge_point(self, point, eps=1e-7):
         return any([line_segment.contains_point(point, eps) for line_segment in self.yield_line_segments()])
@@ -78,3 +78,26 @@ class Triangle(object):
                         break
         
         return back_list, front_list
+
+    def intersect_with(self, other, eps=1e-7):
+        if isinstance(other, Triangle):
+            point_list = []
+            for line_segment in self.yield_line_segments():
+                point = other.intersect_with(line_segment)
+                if point is not None:
+                    point_list.append(point)
+            for line_segment in other.yield_line_segments():
+                point = self.intersect_with(line_segment)
+                if point is not None:
+                    point_list.append(point)
+            if len(point_list) == 2:
+                line_segment = LineSegment(point_list[0], point_list[1])
+                if line_segment.length() > 0.0:
+                    return line_segment
+        elif isinstance(other, LineSegment):
+            plane = self.calc_plane()
+            alpha = plane.intersect_line_segment(other)
+            if alpha is not None and 0.0 <= alpha <= 1.0:
+                point = other.lerp(alpha)
+                if self.contains_point(point, eps):
+                    return point

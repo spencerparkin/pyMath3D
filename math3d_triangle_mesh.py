@@ -29,7 +29,10 @@ class TriangleMesh(object):
     
     def valid_offset(self, i):
         return True if 0 <= i < len(self.vertex_list) else False
-    
+
+    def is_convex(self):
+        pass # TODO: Determine whether the mesh forms a convex or concave shape.
+
     def yield_triangles(self):
         for triangle in self.triangle_list:
             yield self.make_triangle(triangle)
@@ -90,32 +93,41 @@ class TriangleMesh(object):
         self.vertex_list.append(new_point)
         return len(self.vertex_list) - 1
     
-    def side(self, point, eps=1e-7):
-        # Assuming this mesh to be a convex hull, tell us which side the given point is on.
-        for triangle in self.yield_triangles():
-            plane = triangle.calc_plane()
-            side = plane.side(point, eps)
-            if side == Side.FRONT:
-                return Side.FRONT
-        # It could also be on the mesh, but let's just do this for now.
-        return Side.BACK
+    def side(self, other, eps=1e-7):
+        if isinstance(other, Vector):
+            # Assuming this mesh to be a convex hull, tell us which side the given point is on.
+            for triangle in self.yield_triangles():
+                plane = triangle.calc_plane()
+                side = plane.side(other, eps)
+                if side == Side.FRONT:
+                    return Side.FRONT
+            # It could also be on the mesh, but let's just do this for now.
+            return Side.BACK
     
     def split_against_mesh(self, tri_mesh):
-        # The given mesh should be a convex shape.  If not, the result is left undefined.
+        # The given mesh must be a convex shape.  If not, the result is left undefined.
         back_mesh_list = []
         front_mesh_list = []
+
         triangle_list = self.to_triangle_list()
+
         while len(triangle_list) > 0:
             triangle = triangle_list.pop(0)
-            for cutting_triangle in tri_mesh.yield_triangles():
-                cutting_plane = cutting_triangle.calc_plane()
-                back_list, front_list = triangle.split_against_plane(cutting_plane)
-                if len(front_list) == 0:
-                    back_mesh_list += back_list
-                elif len(back_list) == 0:
-                    front_mesh_list += front_list
+
+            if all([tri_mesh.side(triangle[i]) == Side.BACK for i in range(3)]):
+                back_mesh_list.append(triangle)
+            else:
+                for cutting_triangle in tri_mesh.yield_triangles():
+                    line_segment = triangle.intersect_with(cutting_triangle)
+                    if line_segment is not None:
+                        cutting_plane = cutting_triangle.calc_plane()
+                        back_list, front_list = triangle.split_against_plane(cutting_plane)
+                        if len(back_list) > 0 and len(front_list) > 0:
+                            triangle_list += back_list + front_list
+                            break
                 else:
-                    triangle_list += back_list + front_list
+                    front_mesh_list.append(triangle)
+
         front_tri_mesh = TriangleMesh().from_triangle_list(front_mesh_list)
         back_tri_mesh = TriangleMesh().from_triangle_list(back_mesh_list)
         return back_tri_mesh, front_tri_mesh

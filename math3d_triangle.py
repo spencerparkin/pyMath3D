@@ -68,7 +68,8 @@ class Triangle(object):
                 front_list.append(triangle)
             else:
                 for i in range(3):
-                    if side_list[i] == Side.BACK and side_list[(i + 1) % 3] == Side.FRONT:
+                    if (side_list[i] == Side.BACK and side_list[(i + 1) % 3] == Side.FRONT or
+                            side_list[i] == Side.FRONT and side_list[(i + 1) % 3] == Side.BACK):
                         # This might not be the best tessellation, but it will work.
                         line_segment = LineSegment(triangle[i], triangle[i + 1])
                         alpha = plane.intersect_line_segment(line_segment)
@@ -81,18 +82,20 @@ class Triangle(object):
 
     def intersect_with(self, other, eps=1e-7):
         if isinstance(other, Triangle):
-            point_list = []
+            from math3d_point_cloud import PointCloud
+            point_cloud = PointCloud()
             for line_segment in self.yield_line_segments():
                 point = other.intersect_with(line_segment)
                 if point is not None:
-                    point_list.append(point)
+                    point_cloud.add_point(point)
             for line_segment in other.yield_line_segments():
                 point = self.intersect_with(line_segment)
                 if point is not None:
-                    point_list.append(point)
+                    point_cloud.add_point(point)
+            point_list = point_cloud.point_list
             if len(point_list) == 2:
                 line_segment = LineSegment(point_list[0], point_list[1])
-                if line_segment.length() > 0.0:
+                if line_segment.length() >= eps:
                     return line_segment
         elif isinstance(other, LineSegment):
             plane = self.calc_plane()

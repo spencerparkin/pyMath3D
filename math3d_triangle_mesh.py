@@ -114,7 +114,8 @@ class TriangleMesh(object):
         while len(triangle_list) > 0:
             triangle = triangle_list.pop(0)
 
-            if all([tri_mesh.side(triangle[i]) == Side.BACK for i in range(3)]):
+            side_list = [tri_mesh.side(triangle[i]) for i in range(3)]
+            if all([side == Side.BACK for side in side_list]):
                 back_mesh_list.append(triangle)
             else:
                 for cutting_triangle in tri_mesh.yield_triangles():

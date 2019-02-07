@@ -6,7 +6,14 @@ from math3d_triangle import Triangle
 class PointCloud(object):
     def __init__(self):
         self.point_list = []
-    
+
+    def add_point(self, new_point, eps=1e-7):
+        for point in self.point_list:
+            if (point - new_point).length() < eps:
+                break
+        else:
+            self.point_list.append(new_point)
+
     def _find_initial_tetrahedron_for_convex_hull(self):
         for i in range(len(self.point_list)):
             point_a = self.point_list[i]

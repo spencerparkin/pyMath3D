@@ -6,6 +6,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from PyQt5 import QtGui, QtCore, QtWidgets
 from math3d_triangle_mesh import TriangleMesh, Polyhedron
+from math3d_triangle import Triangle
 from math3d_vector import Vector
 from math3d_transform import AffineTransform
 
@@ -21,6 +22,14 @@ class Window(QtGui.QOpenGLWindow):
 
         transform = AffineTransform(translation=Vector(1.0, 0.0, 0.0))
         self.tri_mesh_b = transform(self.tri_mesh_b)
+
+        #self.tri_mesh_a = TriangleMesh()
+        #self.tri_mesh_a.add_triangle(Triangle(Vector(0.0, 0.0, 0.0), Vector(5.0, 0.0, 0.0), Vector(0.0, 5.0, 0.0)))
+
+        #self.tri_mesh_b = TriangleMesh()
+        #self.tri_mesh_b.add_triangle(Triangle(Vector(1.0, 1.0, 3.0), Vector(4.0, 4.0, 3.0), Vector(1.0, 1.0, -2.0)))
+        #self.tri_mesh_b.add_triangle(Triangle(Vector(1.0, 1.0, -2.0), Vector(4.0, 4.0, 3.0), Vector(5.0, 1.0, 0.0)))
+        #self.tri_mesh_b.add_triangle(Triangle(Vector(1.0, 1.0, 3.0), Vector(1.0, 1.0, -2.0), Vector(-2.0, -6.0, -2.0)))
         
         self.back_mesh = None
         self.front_mesh = None
@@ -136,8 +145,8 @@ class Window(QtGui.QOpenGLWindow):
             if self.tri_mesh_a is not None and self.tri_mesh_b is not None:
                 self.back_mesh, self.front_mesh = self.tri_mesh_a.split_against_mesh(self.tri_mesh_b)
                 self.tri_mesh_a = None
-                #self.tri_mesh_b = None
-                self.back_mesh = None
+                self.tri_mesh_b = None
+                #self.back_mesh = None
                 self.update()
 
 def exceptionHook(cls, exc, tb):

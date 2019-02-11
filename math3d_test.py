@@ -8,6 +8,7 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 from math3d_triangle_mesh import TriangleMesh, Polyhedron
 from math3d_triangle import Triangle
 from math3d_vector import Vector
+from math3d_sphere import Sphere
 from math3d_transform import AffineTransform
 
 class Window(QtGui.QOpenGLWindow):
@@ -15,12 +16,12 @@ class Window(QtGui.QOpenGLWindow):
         super().__init__(parent)
         
         self.tri_mesh_a = TriangleMesh().make_polyhedron(Polyhedron.ICOSAHEDRON)
-        self.tri_mesh_b = TriangleMesh().make_polyhedron(Polyhedron.HEXAHEDRON)
+        self.tri_mesh_b = Sphere(Vector(0.0, 0.0, 0.0), 2.0).make_mesh(5, 10)
 
         transform = AffineTransform(translation=Vector(-1.0, 0.0, 0.0))
         self.tri_mesh_a = transform(self.tri_mesh_a)
 
-        transform = AffineTransform(translation=Vector(1.0, 0.0, 0.0))
+        transform = AffineTransform(translation=Vector(1.0, 0.0, -0.5))
         self.tri_mesh_b = transform(self.tri_mesh_b)
 
         #self.tri_mesh_a = TriangleMesh()

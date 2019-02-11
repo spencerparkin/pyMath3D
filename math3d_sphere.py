@@ -3,6 +3,7 @@
 import math
 
 from math3d_side import Side
+from math3d_vector import Vector
 
 class Sphere(object):
     def __init__(self, center, radius):
@@ -22,3 +23,20 @@ class Sphere(object):
 
     def nearest_point(self, point):
         return (point - self.center).normalized() * self.radius
+    
+    def make_mesh(self, latitudes, longitudes):
+        from math3d_point_cloud import PointCloud
+        point_cloud = PointCloud()
+        point_cloud.point_list.append(Vector(0.0, self.radius, 0.0))
+        point_cloud.point_list.append(Vector(0.0, -self.radius, 0.0))
+        for i in range(1, latitudes):
+            latitude_angle = float(i) / float(latitudes) * math.pi
+            for j in range(0, longitudes):
+                longitude_angle = float(j) / float(longitudes) * 2.0 * math.pi
+                y = self.radius * math.cos(latitude_angle)
+                r = self.radius * math.sin(latitude_angle)
+                x = r * math.cos(longitude_angle)
+                z = r * math.sin(longitude_angle)
+                point_cloud.point_list.append(Vector(x, y, z))
+        tri_mesh = point_cloud.find_convex_hull()
+        return tri_mesh

@@ -200,3 +200,18 @@ class TriangleMesh(object):
                 glVertex3f(tip.x, tip.y, tip.z)
         finally:
             glEnd()
+    
+    def find_naked_edge(self):
+        edge_map = {}
+        for triple in self.triangle_list:
+            for i in range(3):
+                edge = (i, (i + 1) % 3)
+                edge = (triple[edge[0]], triple[edge[1]])
+                edge_key = '%d|%d' % edge if edge[0] <= edge[1] else '%d|%d' % (edge[1], edge[0])
+                if edge_key in edge_map:
+                    edge_map[edge_key] = [edge]
+                else:
+                    edge_map[edge_key].append(edge)
+        for edge_key in edge_map:
+            if len(edge_map[edge_key]) == 1:
+                return edge_map[edge_key][0]

@@ -38,5 +38,5 @@ class Sphere(object):
                 x = r * math.cos(longitude_angle)
                 z = r * math.sin(longitude_angle)
                 point_cloud.point_list.append(Vector(x, y, z))
-        tri_mesh = point_cloud.find_convex_hull()
+        tri_mesh = point_cloud.find_convex_hull(method='gift_wrap')
         return tri_mesh

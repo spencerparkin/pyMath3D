@@ -208,7 +208,7 @@ class TriangleMesh(object):
                 edge = (i, (i + 1) % 3)
                 edge = (triple[edge[0]], triple[edge[1]])
                 edge_key = '%d|%d' % edge if edge[0] <= edge[1] else '%d|%d' % (edge[1], edge[0])
-                if edge_key in edge_map:
+                if edge_key not in edge_map:
                     edge_map[edge_key] = [edge]
                 else:
                     edge_map[edge_key].append(edge)

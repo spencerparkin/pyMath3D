@@ -50,6 +50,9 @@ class Triangle(object):
     def __getitem__(self, i):
         return [self.point_a, self.point_b, self.point_c][i % 3]
 
+    def __setitem__(self, i, point):
+        setattr(self, ['point_a', 'point_b', 'point_c'][i % 3], point)
+
     def split_against_plane(self, plane, eps=1e-7):
         back_list = []
         front_list = []

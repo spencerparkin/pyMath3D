@@ -9,6 +9,9 @@ class PointCloud(object):
     def __init__(self, point_list=None):
         self.point_list = point_list if point_list is not None else []
 
+    def clone(self):
+        return PointCloud([point for point in self.point_list])
+
     def add_point(self, new_point, eps=1e-7):
         for point in self.point_list:
             if (point - new_point).length() < eps:

@@ -4,6 +4,8 @@ import random
 
 from math3d_side import Side
 from math3d_triangle import Triangle
+from math3d_vector import Vector
+from math3d_plane import Plane
 
 class PointCloud(object):
     def __init__(self, point_list=None):
@@ -87,55 +89,82 @@ class PointCloud(object):
         
         elif method == 'gift_wrap':
 
-            while True:
-                point_a = random.choice(self.point_list)
-                point_b = random.choice(self.point_list)
-                point_c = random.choice(self.point_list)
-                hull_tri = Triangle(point_a, point_b, point_c)
-                if hull_tri.area() > eps:
-                    break
-            
-            self.clone()._float_flap_to_surface(hull_tri, random_float=True)
-            
             tri_mesh = TriangleMesh()
+
+            # Find a point on the surface of the hull.
+            j = 0
+            for i in range(1, len(self.point_list)):
+                if self.point_list[i].x > self.point_list[j].x:
+                    j = i
+            
+            # Find an edge on the surface of the hull.
+            point_a = self.point_list[j]
+            for point_b in self.point_list:
+                vector_a = point_b - point_a
+                vector_b = Vector(1.0, 0.0, 0.0).cross(vector_a)
+                normal = vector_a.cross(vector_b).normalized()
+                plane = Plane(point_a, normal)
+                back_list, front_list, neither_list = self.planar_sort(plane)
+                if len(front_list) == 0:
+                    break
+            else:
+                raise Exception('Failed to find edge on surface of convex hull.')
             
             while True:
-                tri_mesh.add_triangle(hull_tri)
                 
+                # Find a non-generate triangle involving the edge on the surface of the hull.
+                while True:
+                    point_c = random.choice(self.point_list)
+                    triangle = Triangle(point_a, point_b, point_c)
+                    if triangle.area() > eps:
+                        break
+                
+                # Float the plane to the surface.
+                while True:
+                    plane = triangle.calc_plane()
+                    largest_distance = 0.0
+                    i = 0
+                    point_list = [point for point in self.point_list]
+                    while i < len(point_list):
+                        distance = plane.point_distance(point_list[i])
+                        if distance >= eps:
+                            if distance > largest_distance:
+                                largest_distance = distance
+                                triangle[2] = point_list[i]
+                            i += 1
+                        else:
+                            del point_list[i]
+                    if largest_distance == 0.0:
+                        break
+                
+                # Now find the convex hull of the points in the plane.
+                #...then add triangles to mesh...
+                
+                # Now find a new edge of the surface of the hull that needs a triangle with it to be floated up.
                 naked_edge = tri_mesh.find_naked_edge()
                 if naked_edge is None:
-                    break
+                    break # We're done when no more naked edges can be found.
                 
-                while True:
-                    point = random.choice(self.point_list)
-                    hull_tri = Triangle(tri_mesh.vertex_list[naked_edge[1]], tri_mesh.vertex_list[naked_edge[0]], point)
-                    if hull_tri.area() > eps:
-                        break
-                    
-                self.clone()._float_flap_to_surface(hull_tri)
+                # Note the reversal of order here.  This ensures we don't find the same triangle from whence the naked edge came.
+                point_a = tri_mesh.vertex_list[naked_edge[1]]
+                point_b = tri_mesh.vertex_list[naked_edge[0]]
         
         # Finally, return the convex hull.
         return tri_mesh
     
-    def _float_flap_to_surface(self, hull_tri, random_float=False):
-        while True:
-            j = random.randint(0, 3) if random_float else 2
-            plane = hull_tri.calc_plane()
-            largest_distance = 0.0
-            i = 0
-            while i < len(self.point_list):
-                distance = plane.point_distance(self.point_list[i])
-                if distance >= 0.0:
-                    if distance > largest_distance:
-                        largest_distance = distance
-                        hull_tri[j] = self.point_list[i]
-                    i += 1
-                elif random_float:
-                    i += 1
-                else:
-                    del self.point_list[i]
-            if largest_distance == 0.0:
-                break
+    def planar_sort(self, plane, eps=1e-7):
+        back_list = []
+        front_list = []
+        neither_list = []
+        for i, point in enumerate(self.point_list):
+            side = plane.side(point, eps)
+            if side == Side.BACK:
+                back_list.append(i)
+            elif side == Side.FRONT:
+                front_list.append(i)
+            elif side == Side.NEITHER:
+                neither_list.append(i)
+        return back_list, front_list, neither_list
     
     def fit_plane(self):
         pass # TODO: Use least-squares method.  This will require solving a system of linear equations.

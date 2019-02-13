@@ -2,5 +2,5 @@
 
 class Side:
     NEITHER = 'NEITHER'
-    FRONT = 'FRONT'
     BACK = 'BACK'
+    FRONT = 'FRONT'

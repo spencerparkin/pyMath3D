@@ -25,6 +25,7 @@ class Sphere(object):
         return (point - self.center).normalized() * self.radius
     
     def make_mesh(self, latitudes, longitudes):
+        # TODO: This works, but it is slow.  We should just build the mesh directly here.
         from math3d_point_cloud import PointCloud
         point_cloud = PointCloud()
         point_cloud.point_list.append(Vector(0.0, self.radius, 0.0))
@@ -38,5 +39,5 @@ class Sphere(object):
                 x = r * math.cos(longitude_angle)
                 z = r * math.sin(longitude_angle)
                 point_cloud.point_list.append(Vector(x, y, z))
-        tri_mesh = point_cloud.find_convex_hull(method='gift_wrap')
+        tri_mesh = point_cloud.find_convex_hull()
         return tri_mesh

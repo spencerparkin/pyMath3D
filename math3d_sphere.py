@@ -25,19 +25,22 @@ class Sphere(object):
         return (point - self.center).normalized() * self.radius
     
     def make_mesh(self, latitudes, longitudes):
-        # TODO: This works, but it is slow.  We should just build the mesh directly here.
-        from math3d_point_cloud import PointCloud
-        point_cloud = PointCloud()
-        point_cloud.point_list.append(Vector(0.0, self.radius, 0.0))
-        point_cloud.point_list.append(Vector(0.0, -self.radius, 0.0))
-        for i in range(1, latitudes):
+        from math3d_triangle_mesh import TriangleMesh
+        from math3d_triangle import Triangle
+        def calc_sphere_vertex(i, j):
             latitude_angle = float(i) / float(latitudes) * math.pi
+            longitude_angle = float(j) / float(longitudes) * 2.0 * math.pi
+            y = self.radius * math.cos(latitude_angle)
+            r = self.radius * math.sin(latitude_angle)
+            x = r * math.cos(longitude_angle)
+            z = r * math.sin(longitude_angle)
+            return Vector(x, y, z)
+        tri_mesh = TriangleMesh()
+        for i in range(1, latitudes - 1):
             for j in range(0, longitudes):
-                longitude_angle = float(j) / float(longitudes) * 2.0 * math.pi
-                y = self.radius * math.cos(latitude_angle)
-                r = self.radius * math.sin(latitude_angle)
-                x = r * math.cos(longitude_angle)
-                z = r * math.sin(longitude_angle)
-                point_cloud.point_list.append(Vector(x, y, z))
-        tri_mesh = point_cloud.find_convex_hull()
+                tri_mesh.add_triangle(Triangle(calc_sphere_vertex(i, j), calc_sphere_vertex(i + 1, j + 1), calc_sphere_vertex(i + 1, j)))
+                tri_mesh.add_triangle(Triangle(calc_sphere_vertex(i, j), calc_sphere_vertex(i, j + 1), calc_sphere_vertex(i + 1, j + 1)))
+        for j in range(0, longitudes):
+            tri_mesh.add_triangle(Triangle(Vector(0.0, self.radius, 0.0), calc_sphere_vertex(1, j + 1), calc_sphere_vertex(1, j)))
+            tri_mesh.add_triangle(Triangle(Vector(0.0, -self.radius, 0.0), calc_sphere_vertex(latitudes - 1, j), calc_sphere_vertex(latitudes - 1, j + 1)))
         return tri_mesh

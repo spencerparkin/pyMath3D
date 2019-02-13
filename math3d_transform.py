@@ -46,16 +46,18 @@ class LinearTransform(Transform):
         self.y_axis = Vector(0.0, 1.0, 0.0).rotated(unit_axis, angle)
         self.z_axis = Vector(0.0, 0.0, 1.0).rotated(unit_axis, angle)
     
-    def make_inverse(self):
-        det = self.determinant()
+    def calc_inverse(self):
+        from math3d_matrix import Matrix3x3
+        matrix = Matrix3x3()
+        matrix.set_row(0, self.x_axis)
+        matrix.set_row(1, self.y_axis)
+        matrix.set_row(2, self.z_axis)
+        inv_matrix = matrix.calc_inverse()
         inverse = LinearTransform()
-        try:
-            inverse.x_axis.x = (self.y_axis.y * self.z_axis.z - self.z_axis.y * self.y_axis.z) / det
-            inverse.y_axis.y = (self.z_axis.y * self.x_axis.z) / det
-            # TODO: Finish this later.
-            return inverse
-        except ZeroDivisionError:
-            return None
+        inverse.x_axis = inv_matrix.get_row(0)
+        inverse.y_axis = inv_matrix.get_row(1)
+        inverse.z_axis = inv_matrix.get_row(2)
+        return inverse
     
     def determinant(self):
         return self.x_axis.cross(self.y_axis).dot(self.z_axis)
@@ -93,5 +95,8 @@ class AffineTransform(Transform):
         self.linear_transform.make_identity()
         self.translation = translation.clone()
     
-    def make_inverse(self):
-        pass
+    def calc_inverse(self):
+        inverse = AffineTransform()
+        inverse.linear_transform = self.linear_transform.make_inverse()
+        inverse.translation = inverse.linear_transform(-self.translation)
+        return inverse

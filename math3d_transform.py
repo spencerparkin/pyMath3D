@@ -22,6 +22,20 @@ class LinearTransform(Transform):
     def clone(self):
         return LinearTransform(self.x_axis, self.y_axis, self.z_axis)
     
+    def to_dict(self):
+        data = {
+            'x_axis': self.x_axis.to_dict(),
+            'y_axis': self.y_axis.to_dict(),
+            'z_axis': self.z_axis.to_dict()
+        }
+        return data
+    
+    def from_dict(self, data):
+        self.x_axis = Vector().from_dict(data.get('x_axis'))
+        self.y_axis = Vector().from_dict(data.get('y_axis'))
+        self.z_axis = Vector().from_dict(data.get('z_axis'))
+        return self
+    
     def __call__(self, input):
         from math3d_triangle_mesh import TriangleMesh
         
@@ -70,6 +84,18 @@ class AffineTransform(Transform):
     
     def clone(self):
         return AffineTransform(self.linear_transform.x_axis, self.linear_transform.y_axis, self.linear_transform.z_axis, self.translation)
+    
+    def to_dict(self):
+        data = {
+            'linear_transform': self.linear_transform.to_dict(),
+            'translation': self.translation.to_dict()
+        }
+        return data
+    
+    def from_dict(self, data):
+        self.linear_transform = LinearTransform().from_dict(data.get('linear_transform'))
+        self.translation = Vector().from_dict(data.get('translation'))
+        return self
     
     def __call__(self, input):
         from math3d_triangle_mesh import TriangleMesh

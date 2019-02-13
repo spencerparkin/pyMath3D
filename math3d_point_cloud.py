@@ -14,6 +14,16 @@ class PointCloud(object):
     def clone(self):
         return PointCloud([point for point in self.point_list])
 
+    def to_dict(self):
+        data = {
+            'point_list': [point.to_dict() for point in self.point_list]
+        }
+        return data
+    
+    def from_dict(self, data):
+        self.point_list = [Vector().from_dict(point) for point in data.get('point_list', [])]
+        return self
+
     def add_point(self, new_point, eps=1e-7):
         for point in self.point_list:
             if (point - new_point).length() < eps:

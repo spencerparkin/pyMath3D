@@ -37,6 +37,18 @@ class TriangleMesh(object):
         for triangle in self.triangle_list:
             yield self.make_triangle(triangle)
     
+    def to_dict(self):
+        data = {
+            'vertex_list': [vertex.to_dict() for vertex in self.vertex_list],
+            'triangle_list': [triple for triple in self.triangle_list]
+        }
+        return data
+    
+    def from_dict(self, data):
+        self.vertex_list = [Vector().from_dict(vertex) for vertex in data.get('vertex_list', [])]
+        self.triangle_list = [(triple[0], triple[1], triple[2]) for triple in data.get('triangle_list', [])]
+        return self
+    
     def to_triangle_list(self):
         return [triangle for triangle in self.yield_triangles()]
     

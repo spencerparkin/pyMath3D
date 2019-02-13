@@ -11,6 +11,19 @@ class Vector(object):
     def clone(self):
         return Vector(self.x, self.y, self.z)
 
+    def to_dict(self):
+        return {
+            'x': self.x,
+            'y': self.y,
+            'z': self.z
+        }
+    
+    def from_dict(self, data):
+        self.x = data.get('x', 0.0)
+        self.y = data.get('y', 0.0)
+        self.z = data.get('z', 0.0)
+        return self
+
     def __add__(self, other):
         return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
 

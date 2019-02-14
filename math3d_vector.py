@@ -74,13 +74,23 @@ class Vector(object):
         return math.acos(self.normalized().dot(other.normalized()))
 
     def rotated(self, unit_axis, angle):
-        projection = self.projection(unit_axis)
+        projection = self.projected(unit_axis)
         rejection = self.rejected(unit_axis)
         x_axis = rejection.normalized()
+        if x_axis is None:
+            return self.clone()
         y_axis = unit_axis.cross(x_axis)
         radius = rejection.length()
         rejection = x_axis * radius * math.cos(angle) + y_axis * radius * math.sin(angle)
         return projection + rejection
+    
+    def perpendicular_vector(self, eps=1e-7):
+        if math.fabs(self.x) > eps or math.fabs(self.y) > eps:
+            return Vector(self.y, -self.x, 0.0)
+        elif math.fabs(self.x) > eps or math.fabs(self.z) > eps:
+            return Vector(self.z, 0.0, -self.x)
+        elif math.fabs(self.y) > eps or math.fabs(self.z) > eps:
+            return Vector(0.0, self.z, -self.y)
     
     def __hash__(self):
         return hash(str(self))

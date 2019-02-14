@@ -54,11 +54,19 @@ class LinearTransform(Transform):
         self.x_axis = Vector(1.0, 0.0, 0.0)
         self.y_axis = Vector(0.0, 1.0, 0.0)
         self.z_axis = Vector(0.0, 0.0, 1.0)
+        return self
     
     def make_rotation(self, unit_axis, angle):
         self.x_axis = Vector(1.0, 0.0, 0.0).rotated(unit_axis, angle)
         self.y_axis = Vector(0.0, 1.0, 0.0).rotated(unit_axis, angle)
         self.z_axis = Vector(0.0, 0.0, 1.0).rotated(unit_axis, angle)
+        return self
+    
+    def make_uniform_scale(self, scale):
+        self.x_axis = Vector(scale, 0.0, 0.0)
+        self.y_axis = Vector(0.0, scale, 0.0)
+        self.z_axis = Vector(0.0, 0.0, scale)
+        return self
     
     def calc_inverse(self):
         from math3d_matrix import Matrix3x3
@@ -113,13 +121,15 @@ class AffineTransform(Transform):
             output.vertex_list = self(input.vertex_list)
         return output
     
-    def make_rigid_body_motion(self, unit_axis, angle, translation):
+    def make_rigid_body_motion(self, unit_axis, angle, translation=None):
         self.linear_transform.make_rotation(unit_axis, angle)
-        self.translation = translation.clone()
+        self.translation = translation.clone() if translation is not None else Vector(0.0, 0.0, 0.0)
+        return self
     
     def make_translation(self, translation):
         self.linear_transform.make_identity()
         self.translation = translation.clone()
+        return self
     
     def calc_inverse(self):
         inverse = AffineTransform()

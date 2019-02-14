@@ -15,7 +15,7 @@ class Window(QtGui.QOpenGLWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        self.tri_mesh_a = TriangleMesh().make_polyhedron(Polyhedron.HEXAHEDRON)
+        self.tri_mesh_a = TriangleMesh.make_polyhedron(Polyhedron.HEXAHEDRON)
         self.tri_mesh_b = Sphere(Vector(0.0, 0.0, 0.0), 2.0).make_mesh(10, 20)
 
         transform = AffineTransform(translation=Vector(-1.0, 0.0, 0.0))

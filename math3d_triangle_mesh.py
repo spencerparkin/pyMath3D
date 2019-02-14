@@ -14,8 +14,13 @@ class Polyhedron:
     ICOSIDODECAHEDRON = 4
 
 class TriangleMesh(object):
-    def __init__(self):
-        self.clear()
+    def __init__(self, mesh=None):
+        if mesh is None:
+            self.clear()
+        else:
+            mesh = mesh.clone()
+            self.vertex_list = mesh.vertex_list
+            self.triangle_list = mesh.triangle_list
     
     def clear(self):
         self.vertex_list = []
@@ -152,7 +157,8 @@ class TriangleMesh(object):
         center = center / float(len(self.vertex_list))
         return center
     
-    def make_polyhedron(self, polyhedron):
+    @staticmethod
+    def make_polyhedron(polyhedron):
         from math3d_point_cloud import PointCloud
         point_cloud = PointCloud()
         
@@ -181,6 +187,27 @@ class TriangleMesh(object):
             point_cloud.point_list += [point for point in Vector(phi / 2.0, phi * phi / 2.0, 0.5).sign_permute()]
         
         return point_cloud.find_convex_hull()
+    
+    @staticmethod
+    def make_disk(center, unit_normal, radius, sides):
+        from math3d_transform import AffineTransform
+        transform = AffineTransform(translation=center, z_axis=unit_normal)
+        transform.linear_transform.x_axis = unit_normal.perpendicular_vector().normalized()
+        transform.linear_transform.y_axis = unit_normal.cross(transform.linear_transform.x_axis)
+        
+        vertex_list = []
+        for i in range(sides):
+            angle = float(i) / float(sides) * 2.0 * math.pi
+            vertex = Vector(radius * math.cos(angle), radius * math.sin(angle), 0.0)
+            vertex = transform(vertex)
+            vertex_list.append(vertex)
+
+        mesh = TriangleMesh()
+        for i in range(sides):
+            triangle = Triangle(vertex_list[i], vertex_list[(i + 1) % sides], center)
+            mesh.add_triangle(triangle)
+        
+        return mesh
     
     def render(self):
         from OpenGL.GL import GL_TRIANGLES, glBegin, glEnd, glVertex3f, glNormal3f
@@ -213,7 +240,11 @@ class TriangleMesh(object):
         finally:
             glEnd()
     
-    def find_naked_edge(self):
+    def find_boundary_loops(self):
+        # If the mesh is not a typical manifold, the results of this function are undefined.
+        # The topology of the manifold shouldn't matter.
+        
+        # Generate a map of all bare edges.
         edge_map = {}
         for triple in self.triangle_list:
             for i in range(3):
@@ -221,9 +252,28 @@ class TriangleMesh(object):
                 edge = (triple[edge[0]], triple[edge[1]])
                 edge_key = '%d|%d' % edge if edge[0] <= edge[1] else '%d|%d' % (edge[1], edge[0])
                 if edge_key not in edge_map:
-                    edge_map[edge_key] = [edge]
+                    edge_map[edge_key] = edge
                 else:
-                    edge_map[edge_key].append(edge)
+                    del edge_map[edge_key]
+        
+        # Generate a map we can use to follow the edges sequentially.
+        # This should work due to consistent winding of the triangles in the mesh.
+        vertex_map = {}
         for edge_key in edge_map:
-            if len(edge_map[edge_key]) == 1:
-                return edge_map[edge_key][0]
+            edge = edge_map[edge_key]
+            vertex_map[edge[0]] = edge[1]
+            
+        # Now go read-off all the loops.
+        loop_list = []
+        while len(vertex_map) > 0:
+            vertex_list = []
+            vertex = list(vertex_map.keys())[0]
+            while len(vertex_list) == 0 or vertex_list[0] != vertex:
+                vertex_list.append(vertex)
+                new_vertex = vertex_map[vertex]
+                del vertex_map[vertex]
+                vertex = new_vertex
+            loop_list.append(vertex_list)
+        
+        # Finally, return the list of loops.
+        return loop_list

@@ -24,6 +24,13 @@ class PointCloud(object):
         self.point_list = [Vector().from_dict(point) for point in data.get('point_list', [])]
         return self
 
+    def calc_center(self):
+        center = Vector(0.0, 0.0, 0.0)
+        for point in self.point_list:
+            center = center + point
+        center = center * (1.0 / float(len(self.point_list)))
+        return center
+
     def add_point(self, new_point, eps=1e-7):
         for point in self.point_list:
             if (point - new_point).length() < eps:

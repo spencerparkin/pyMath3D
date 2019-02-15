@@ -270,7 +270,10 @@ class TriangleMesh(object):
             vertex = list(vertex_map.keys())[0]
             while len(vertex_list) == 0 or vertex_list[0] != vertex:
                 vertex_list.append(vertex)
-                new_vertex = vertex_map[vertex]
+                try:
+                    new_vertex = vertex_map[vertex]
+                except KeyError:
+                    break
                 del vertex_map[vertex]
                 vertex = new_vertex
             loop_list.append(vertex_list)

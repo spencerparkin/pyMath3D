@@ -2,15 +2,16 @@
 
 import math
 
+from math3d_vector import Vector
 from math3d_side import Side
 from math3d_plane import Plane
 from math3d_line_segment import LineSegment
 
 class Triangle(object):
-    def __init__(self, point_a, point_b, point_c):
-        self.point_a = point_a.clone()
-        self.point_b = point_b.clone()
-        self.point_c = point_c.clone()
+    def __init__(self, point_a=None, point_b=None, point_c=None):
+        self.point_a = point_a.clone() if point_a is not None else Vector(0.0, 0.0, 0.0)
+        self.point_b = point_b.clone() if point_b is not None else Vector(0.0, 0.0, 0.0)
+        self.point_c = point_c.clone() if point_c is not None else Vector(0.0, 0.0, 0.0)
 
     def clone(self):
         return Triangle(self.point_a, self.point_b, self.point_c)

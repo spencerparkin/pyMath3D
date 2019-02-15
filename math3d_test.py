@@ -17,7 +17,9 @@ class Window(QtGui.QOpenGLWindow):
         super().__init__(parent)
         
         self.tri_mesh_a = TriangleMesh.make_polyhedron(Polyhedron.HEXAHEDRON)
-        self.tri_mesh_b = Sphere(Vector(-math.sqrt(2.0), -math.sqrt(2.0), 0.0), math.sqrt(2.0)).make_mesh(5, 10)
+        radius = (Vector(math.sqrt(2.0), math.sqrt(2.0), 0.0) - Vector(0.0, 1.0, 0.0)).length()
+        self.tri_mesh_b = Sphere(Vector(math.sqrt(2.0), math.sqrt(2.0), 0.0), radius).make_mesh(subdivision_level=2)
+        self.tri_mesh_c = Sphere(Vector(-math.sqrt(2.0), math.sqrt(2.0), 0.0), radius).make_mesh(subdivision_level=2)
 
         #transform = AffineTransform(translation=Vector(-1.0, 0.0, 0.0))
         #self.tri_mesh_a = transform(self.tri_mesh_a)
@@ -106,6 +108,11 @@ class Window(QtGui.QOpenGLWindow):
             glMaterialfv(GL_FRONT, GL_AMBIENT, [0.0, 0.3, 0.0, 0.3])
             glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.0, 1.0, 0.0, 0.3])
             self.tri_mesh_b.render()
+        
+        if self.tri_mesh_c is not None:
+            glMaterialfv(GL_FRONT, GL_AMBIENT, [0.0, 0.0, 0.3, 0.3])
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.0, 0.0, 1.0, 0.3])
+            self.tri_mesh_c.render()
         
         glPopMatrix()
 

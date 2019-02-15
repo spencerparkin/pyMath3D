@@ -286,3 +286,29 @@ class TriangleMesh(object):
         
         # Finally, return the list of loops.
         return loop_list
+    
+    def reduce_vertices(self, eps=1e-3):
+        while True:
+            i, j = self.find_point_pair_within_distance(eps)
+            if i is None or j is None:
+                break
+            
+            mid_point = (point_a + point_b) / 2.0
+            self.vertex_list.append(mid_point)
+            
+            for triple in self.triangle_list:
+                for k in range(3):
+                    if triple[k] == i or triple[k] == j:
+                        triple[k] = len(self.vertex_list) - 1
+            
+            triangle_list = self.to_triangle_list()
+            self.from_triangle_list(triangle_list)
+        
+    def find_point_pair_within_distance(self, distance):
+        for i in range(len(self.vertex_list)):
+            point_a = self.vertex_list[i]
+            for j in range(i + 1, len(self.vertex_list)):
+                point_b = self.vertex_list[j]
+                if (point_a - point_b).length() <= distance:
+                    return i, j
+        return None, None

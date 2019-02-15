@@ -208,7 +208,13 @@ class TriangleMesh(object):
             mesh.add_triangle(triangle)
         
         return mesh
-    
+
+    def area(self):
+        total = 0.0
+        for triangle in self.yield_triangles():
+            total += triangle.area()
+        return total
+
     def render(self):
         from OpenGL.GL import GL_TRIANGLES, glBegin, glEnd, glVertex3f, glNormal3f
         

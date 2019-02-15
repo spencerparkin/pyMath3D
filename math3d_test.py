@@ -1,6 +1,7 @@
 # math3d_test.py
 
 import sys
+import math
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -16,13 +17,13 @@ class Window(QtGui.QOpenGLWindow):
         super().__init__(parent)
         
         self.tri_mesh_a = TriangleMesh.make_polyhedron(Polyhedron.HEXAHEDRON)
-        self.tri_mesh_b = Sphere(Vector(0.0, 0.0, 0.0), 2.0).make_mesh(10, 20)
+        self.tri_mesh_b = Sphere(Vector(-math.sqrt(2.0), -math.sqrt(2.0), 0.0), math.sqrt(2.0)).make_mesh(5, 10)
 
-        transform = AffineTransform(translation=Vector(-1.0, 0.0, 0.0))
-        self.tri_mesh_a = transform(self.tri_mesh_a)
+        #transform = AffineTransform(translation=Vector(-1.0, 0.0, 0.0))
+        #self.tri_mesh_a = transform(self.tri_mesh_a)
 
-        transform = AffineTransform(translation=Vector(1.0, 0.0, -0.5))
-        self.tri_mesh_b = transform(self.tri_mesh_b)
+        #transform = AffineTransform(translation=Vector(1.0, 0.0, -0.5))
+        #self.tri_mesh_b = transform(self.tri_mesh_b)
 
         #self.tri_mesh_a = TriangleMesh()
         #self.tri_mesh_a.add_triangle(Triangle(Vector(0.0, 0.0, 0.0), Vector(5.0, 0.0, 0.0), Vector(0.0, 5.0, 0.0)))

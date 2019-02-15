@@ -34,13 +34,13 @@ class Sphere(object):
             r = self.radius * math.sin(latitude_angle)
             x = r * math.cos(longitude_angle)
             z = r * math.sin(longitude_angle)
-            return Vector(x, y, z)
+            return Vector(x, y, z) + self.center
         tri_mesh = TriangleMesh()
         for i in range(1, latitudes - 1):
             for j in range(0, longitudes):
                 tri_mesh.add_triangle(Triangle(calc_sphere_vertex(i, j), calc_sphere_vertex(i + 1, j + 1), calc_sphere_vertex(i + 1, j)))
                 tri_mesh.add_triangle(Triangle(calc_sphere_vertex(i, j), calc_sphere_vertex(i, j + 1), calc_sphere_vertex(i + 1, j + 1)))
         for j in range(0, longitudes):
-            tri_mesh.add_triangle(Triangle(Vector(0.0, self.radius, 0.0), calc_sphere_vertex(1, j + 1), calc_sphere_vertex(1, j)))
-            tri_mesh.add_triangle(Triangle(Vector(0.0, -self.radius, 0.0), calc_sphere_vertex(latitudes - 1, j), calc_sphere_vertex(latitudes - 1, j + 1)))
+            tri_mesh.add_triangle(Triangle(self.center + Vector(0.0, self.radius, 0.0), calc_sphere_vertex(1, j + 1), calc_sphere_vertex(1, j)))
+            tri_mesh.add_triangle(Triangle(self.center + Vector(0.0, -self.radius, 0.0), calc_sphere_vertex(latitudes - 1, j), calc_sphere_vertex(latitudes - 1, j + 1)))
         return tri_mesh

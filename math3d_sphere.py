@@ -24,23 +24,25 @@ class Sphere(object):
     def nearest_point(self, point):
         return (point - self.center).normalized() * self.radius
     
-    def make_mesh(self, latitudes, longitudes):
-        from math3d_triangle_mesh import TriangleMesh
+    def make_mesh(self, subdivision_level=1):
+        from math3d_triangle_mesh import TriangleMesh, Polyhedron
         from math3d_triangle import Triangle
-        def calc_sphere_vertex(i, j):
-            latitude_angle = float(i) / float(latitudes) * math.pi
-            longitude_angle = float(j) / float(longitudes) * 2.0 * math.pi
-            y = self.radius * math.cos(latitude_angle)
-            r = self.radius * math.sin(latitude_angle)
-            x = r * math.cos(longitude_angle)
-            z = r * math.sin(longitude_angle)
-            return Vector(x, y, z) + self.center
-        tri_mesh = TriangleMesh()
-        for i in range(1, latitudes - 1):
-            for j in range(0, longitudes):
-                tri_mesh.add_triangle(Triangle(calc_sphere_vertex(i, j), calc_sphere_vertex(i + 1, j + 1), calc_sphere_vertex(i + 1, j)))
-                tri_mesh.add_triangle(Triangle(calc_sphere_vertex(i, j), calc_sphere_vertex(i, j + 1), calc_sphere_vertex(i + 1, j + 1)))
-        for j in range(0, longitudes):
-            tri_mesh.add_triangle(Triangle(self.center + Vector(0.0, self.radius, 0.0), calc_sphere_vertex(1, j + 1), calc_sphere_vertex(1, j)))
-            tri_mesh.add_triangle(Triangle(self.center + Vector(0.0, -self.radius, 0.0), calc_sphere_vertex(latitudes - 1, j), calc_sphere_vertex(latitudes - 1, j + 1)))
+        tri_mesh = TriangleMesh.make_polyhedron(Polyhedron.ICOSAHEDRON)
+        triangle_list = tri_mesh.to_triangle_list()
+        for triangle in triangle_list:
+            for i in range(3):
+                triangle[i] = triangle[i].normalized() * self.radius
+        for i in range(subdivision_level):
+            new_triangle_list = []
+            for triangle in triangle_list:
+                for j in range(3):
+                    new_triangle_list.append(Triangle(triangle[j], (triangle[j] + triangle[j + 1]).normalized() * self.radius, (triangle[j] + triangle[j + 2]).normalized() * self.radius))
+                new_triangle = Triangle()
+                for j in range(3):
+                    new_triangle[j] = (triangle[j] + triangle[j + 1]).normalized() * self.radius
+                new_triangle_list.append(new_triangle)
+            triangle_list = new_triangle_list
+        tri_mesh.from_triangle_list(triangle_list)
+        for i, vertex in enumerate(tri_mesh.vertex_list):
+            tri_mesh.vertex_list[i] = vertex + self.center
         return tri_mesh

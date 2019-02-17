@@ -1,6 +1,7 @@
 # math3d_plane.py
 
 from math3d_side import Side
+from math3d_vector import Vector
 
 class Plane(object):
     def __init__(self, center, unit_normal):
@@ -9,6 +10,18 @@ class Plane(object):
 
     def clone(self):
         return Plane(self.center, self.unit_normal)
+
+    def to_dict(self):
+        data = {
+            'center': self.center.to_dict(),
+            'unit_normal': self.unit_normal.to_dict()
+        }
+        return data
+
+    def from_dict(self, data):
+        self.center = Vector().from_dict(data.get('center', {}))
+        self.unit_normal = Vector().from_dict(data.get('unit_normal', {}))
+        return self
 
     def contains_point(self, point, eps=1e-7):
         return Side.NEITHER == self.side(point, eps)

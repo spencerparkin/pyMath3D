@@ -64,6 +64,9 @@ class Vector(object):
         except ZeroDivisionError:
             return None
 
+    def resized(self, length):
+        return self.normalized() * length
+
     def projected(self, unit_normal):
         return unit_normal * self.dot(unit_normal)
 

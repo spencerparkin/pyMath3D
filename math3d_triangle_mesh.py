@@ -98,10 +98,13 @@ class TriangleMesh(object):
             self.add_triangle(triangle)
     
     def make_triangle(self, triangle):
-        point_a = self.vertex_list[triangle[0]]
-        point_b = self.vertex_list[triangle[1]]
-        point_c = self.vertex_list[triangle[2]]
-        return Triangle(point_a, point_b, point_c)
+        if isinstance(triangle, tuple):
+            point_a = self.vertex_list[triangle[0]]
+            point_b = self.vertex_list[triangle[1]]
+            point_c = self.vertex_list[triangle[2]]
+            return Triangle(point_a, point_b, point_c)
+        elif isinstance(triangle, int):
+            return self.make_triangle(self.triangle_list[triangle])
     
     def find_or_add_vertex(self, new_point, eps=1e-7):
         for i, point in enumerate(self.vertex_list):

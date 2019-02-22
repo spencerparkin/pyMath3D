@@ -1,6 +1,7 @@
 # math3d_vector.py
 
 import math
+import random
 
 class Vector(object):
     def __init__(self, x=0.0, y=0.0, z=0.0):
@@ -23,6 +24,9 @@ class Vector(object):
         self.y = data.get('y', 0.0)
         self.z = data.get('z', 0.0)
         return self
+
+    def __neg__(self):
+        return Vector(-self.x, -self.y, -self.z)
 
     def __add__(self, other):
         return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
@@ -66,6 +70,9 @@ class Vector(object):
 
     def resized(self, length):
         return self.normalized() * length
+
+    def scaled(self, scale):
+        return self * scale
 
     def projected(self, unit_normal):
         return unit_normal * self.dot(unit_normal)
@@ -118,3 +125,9 @@ class Vector(object):
             for y_scale in y_list:
                 for z_scale in z_list:
                     yield Vector(x_scale, y_scale, z_scale) * self
+    
+    def random(self, min_value=0.0, max_value=1.0):
+        self.x = random.uniform(min_value, max_value)
+        self.y = random.uniform(min_value, max_value)
+        self.z = random.uniform(min_value, max_value)
+        return self

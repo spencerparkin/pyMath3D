@@ -154,11 +154,15 @@ class TriangleMesh(object):
         return back_tri_mesh, front_tri_mesh
     
     def calc_center(self):
-        center = Vector(0.0, 0.0, 0.0)
-        for point in self.vertex_list:
-            center += point
-        center = center / float(len(self.vertex_list))
-        return center
+        from math3d_point_cloud import PointCloud
+        return PointCloud(point_list=self.vertex_list).calc_center()
+    
+    def calc_triangle_center(self):
+        from math3d_point_cloud import PointCloud
+        point_cloud = PointCloud()
+        for triangle in self.yield_triangles():
+            point_cloud.add_point(triangle.calc_center())
+        return point_cloud.calc_center()
     
     @staticmethod
     def make_polyhedron(polyhedron):

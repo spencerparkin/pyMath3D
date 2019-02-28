@@ -32,6 +32,14 @@ class TriangleMesh(object):
         new_mesh.triangle_list = [triangle for triangle in self.triangle_list]
         return new_mesh
     
+    def __add__(self, other):
+        mesh = TriangleMesh()
+        for triangle in self.yield_triangles():
+            mesh.add_triangle(triangle)
+        for triangle in other.yield_triangles():
+            mesh.add_triangle(triangle)
+        return mesh
+    
     def valid_offset(self, i):
         return True if 0 <= i < len(self.vertex_list) else False
 

@@ -67,6 +67,12 @@ class LinearTransform(Transform):
         self.y_axis = Vector(0.0, scale, 0.0)
         self.z_axis = Vector(0.0, 0.0, scale)
         return self
+
+    def make_non_uniform_scale(self, x_scale, y_scale, z_scale):
+        self.x_axis = Vector(x_scale, 0.0, 0.0)
+        self.y_axis = Vector(0.0, y_scale, 0.0)
+        self.z_axis = Vector(0.0, 0.0, z_scale)
+        return self
     
     def calc_inverse(self):
         from math3d_matrix import Matrix3x3
@@ -130,7 +136,14 @@ class AffineTransform(Transform):
         self.linear_transform.make_identity()
         self.translation = translation.clone()
         return self
-    
+
+    def make_rotation(self, axis, angle, center=None):
+        if center is None:
+            center = Vector(0.0, 0.0, 0.0)
+        self.linear_transform.make_rotation(axis, angle)
+        self.translation = self.linear_transform(-center) + center
+        return self
+
     def calc_inverse(self):
         inverse = AffineTransform()
         inverse.linear_transform = self.linear_transform.make_inverse()

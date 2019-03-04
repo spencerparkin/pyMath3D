@@ -106,7 +106,7 @@ class TriangleMesh(object):
             self.add_triangle(triangle)
     
     def make_triangle(self, triangle):
-        if isinstance(triangle, tuple):
+        if isinstance(triangle, tuple) or isinstance(triangle, list):
             point_a = self.vertex_list[triangle[0]]
             point_b = self.vertex_list[triangle[1]]
             point_c = self.vertex_list[triangle[2]]
@@ -302,7 +302,7 @@ class TriangleMesh(object):
         # Finally, return the list of loops.
         return loop_list
     
-    def reduce_vertices(self, eps=1e-5):
+    def reduce_vertices(self, eps=0.05):
         while True:
             i, j = self.find_point_pair_within_distance(eps)
             if i is None or j is None:
@@ -323,8 +323,8 @@ class TriangleMesh(object):
             
             k = 0
             while k < len(self.triangle_list):
-                triple = self.triangle_list[i]
-                triple_set = {i for i in triple}
+                triple = self.triangle_list[k]
+                triple_set = {q for q in triple}
                 if len(triple_set) < 3:
                     del self.triangle_list[k]
                 else:

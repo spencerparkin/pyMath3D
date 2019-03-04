@@ -147,8 +147,8 @@ class TriangleMesh(object):
                 back_mesh_list.append(triangle)
             else:
                 for cutting_triangle in tri_mesh.yield_triangles():
-                    line_segment = triangle.intersect_with(cutting_triangle)
-                    if line_segment is not None:
+                    result = triangle.intersect_with(cutting_triangle)
+                    if result is not None:
                         cutting_plane = cutting_triangle.calc_plane()
                         back_list, front_list = triangle.split_against_plane(cutting_plane)
                         if len(back_list) > 0 and len(front_list) > 0:

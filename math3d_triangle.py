@@ -101,6 +101,8 @@ class Triangle(object):
                 line_segment = LineSegment(point_list[0], point_list[1])
                 if line_segment.length() >= eps:
                     return line_segment
+            elif len(point_list) > 0:
+                return point_cloud
         elif isinstance(other, LineSegment):
             plane = self.calc_plane()
             alpha = plane.intersect_line_segment(other)

@@ -12,6 +12,8 @@ class Polyhedron:
     ICOSAHEDRON = 2
     DODECAHEDRON = 3
     ICOSIDODECAHEDRON = 4
+    TRUNCATED_TETRAHEDRON = 5
+    TRUNCATED_TETRAHEDRON = 6
 
 class TriangleMesh(object):
     def __init__(self, mesh=None):
@@ -200,7 +202,13 @@ class TriangleMesh(object):
             point_cloud.point_list += [point for point in Vector(0.5, phi / 2.0, phi * phi / 2.0).sign_permute()]
             point_cloud.point_list += [point for point in Vector(phi * phi / 2.0, 0.5, phi / 2.0).sign_permute()]
             point_cloud.point_list += [point for point in Vector(phi / 2.0, phi * phi / 2.0, 0.5).sign_permute()]
-        
+        elif polyhedron == Polyhedron.TRUNCATED_TETRAHEDRON:
+            point_cloud.point_list = [Vector(3.0, 1.0, 1.0), Vector(-3.0, -1.0, 1.0), Vector(-3.0, 1.0, -1.0), Vector(3.0, -1.0, -1.0)]
+            point_cloud.point_list += [Vector(1.0, 3.0, 1.0), Vector(-1.0, -3.0, 1.0), Vector(-1.0, 3.0, -1.0), Vector(1.0, -3.0, -1.0)]
+            point_cloud.point_list += [Vector(1.0, 1.0, 3.0), Vector(-1.0, -1.0, 3.0), Vector(-1.0, 1.0, -3.0), Vector(1.0, -1.0, -3.0)]
+        elif polyhedron == Polyhedron.TRUNCATED_OCTAHEDRON:
+            point_cloud.point_list += [point for point in Vector(0.0, 1.0, 2.0).sign_permute()]
+
         return point_cloud.find_convex_hull()
     
     @staticmethod

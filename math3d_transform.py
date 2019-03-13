@@ -149,6 +149,6 @@ class AffineTransform(Transform):
 
     def calc_inverse(self):
         inverse = AffineTransform()
-        inverse.linear_transform = self.linear_transform.make_inverse()
+        inverse.linear_transform = self.linear_transform.calc_inverse()
         inverse.translation = inverse.linear_transform(-self.translation)
         return inverse

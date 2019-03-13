@@ -43,28 +43,31 @@ class Matrix3x3(object):
             return None
     
     def calc_determinant(self):
-        return self.get_row(0).cross(self.get_row(1)).dot(self.get_row(2))
+        det = 0.0
+        for i in range(3):
+            det += self.elements[0][i] * self.calc_cofactor(0, i)
+        return det
     
     def calc_adjoint(self):
-        return self.calc_cofactor().make_transpose()
+        return self.calc_cofactor_matrix().make_transpose()
         
     def calc_cofactor_matrix(self):
         cofactor_matrix = Matrix3x3()
         for i in range(3):
             for j in range(3):
-                cofactor_matrix[i][j] = self.calc_cofactor(i, j)
+                cofactor_matrix.elements[i][j] = self.calc_cofactor(i, j)
         return cofactor_matrix
     
     def calc_cofactor(self, i, j):
         element_list = []
         for row in range(3):
-            if row == i:
-                continue
             for col in range(3):
-                if col == j:
-                    continue
-            element_list.append(self.elements[row][col])
-        return element_list[0] * element_list[2] - element_list[1] * element_list[3]
+                if row != i and col != j:
+                    element_list.append(self.elements[row][col])
+        det = element_list[0] * element_list[3] - element_list[1] * element_list[2]
+        if i + j % 2 == 1:
+            det *= -1.0
+        return det
 
     def make_transpose(self):
         tranpose = Matrix3x3()
@@ -143,3 +146,28 @@ class Matrix3x3(object):
     
     def calc_graham_schmidt_decomposition(self):
         pass
+
+    def __str__(self):
+        matrix_str = ''
+        for i in range(3):
+            row = self.get_row(i)
+            matrix_str += '[%f %f %f]\n' % (row.x, row.y, row.z)
+        return matrix_str
+
+if __name__ == '__main__':
+    from math3d_vector import Vector
+    matrix = Matrix3x3()
+    matrix.elements[0][0] = 2.0
+    matrix.elements[0][1] = 3.0
+    matrix.elements[0][2] = -4.0
+    matrix.elements[1][0] = -2.0
+    matrix.elements[1][1] = 5.0
+    matrix.elements[1][2] = -5.0
+    matrix.elements[2][0] = -2.0
+    matrix.elements[2][1] = -3.0
+    matrix.elements[2][2] = -4.0
+    print(matrix)
+    inv_matrix = matrix.calc_inverse()
+    print(inv_matrix)
+    product = matrix * inv_matrix
+    print(product)

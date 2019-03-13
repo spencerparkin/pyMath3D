@@ -38,6 +38,7 @@ class LinearTransform(Transform):
     
     def __call__(self, input):
         from math3d_triangle_mesh import TriangleMesh
+        from math3d_point_cloud import PointCloud
         
         if isinstance(input, Vector):
             output = self.x_axis * input.x + self.y_axis * input.y + self.z_axis * input.z
@@ -48,6 +49,8 @@ class LinearTransform(Transform):
         elif isinstance(input, TriangleMesh):
             output = input.clone()
             output.vertex_list = self(input.vertex_list)
+        elif isinstance(input, PointCloud):
+            output = PointCloud(self(input.point_list))
         return output
     
     def make_identity(self):

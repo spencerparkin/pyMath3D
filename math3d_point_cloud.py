@@ -120,4 +120,75 @@ class PointCloud(object):
         return back_list, front_list, neither_list
     
     def fit_plane(self):
-        pass # TODO: Use least-squares method.  This will require solving a system of linear equations.
+        # f(x,y,z) = ax + by + cz + d is the plane equation.
+        # For m points {p_i}, we want to find coefficients a, b, c, d so
+        # that all equations f(p_i)=0 are satisfied or as near satisfied
+        # as they can be in the sense that |f(p_i)| are all minimized.
+        # The least squares method has us define F(a,b,c,d) = Sum_i f^2(p_i),
+        # and then we simply solve for a, b, c, d by setting each of
+        # dF/da, dF/db, dF/dc, dF/dd to zero, which gives us a homogeneous
+        # system of linear equations.  We find a non-trivial solution by
+        # looking for an eigenvector with the smallest associated value.
+        import numpy
+        
+        matrix = [[0.0 for i in range(4)] for j in range(4)]
+        
+        sum_xx = sum([point.x * point.x for point in self.point_list])
+        sum_yy = sum([point.y * point.y for point in self.point_list])
+        sum_zz = sum([point.z * point.z for point in self.point_list])
+        
+        sum_xy = sum([point.x * point.y for point in self.point_list])
+        sum_xz = sum([point.x * point.z for point in self.point_list])
+        sum_yz = sum([point.y * point.z for point in self.point_list])
+        
+        sum_x = sum([point.x for point in self.point_list])
+        sum_y = sum([point.y for point in self.point_list])
+        sum_z = sum([point.z for point in self.point_list])
+
+        matrix[0][0] = sum_xx
+        matrix[0][1] = sum_xy
+        matrix[0][2] = sum_xz
+        matrix[0][3] = sum_x
+        matrix[1][0] = sum_xy
+        matrix[1][1] = sum_yy
+        matrix[1][2] = sum_yz
+        matrix[1][3] = sum_y
+        matrix[2][0] = sum_xz
+        matrix[2][1] = sum_yz
+        matrix[2][2] = sum_zz
+        matrix[2][3] = sum_z
+        matrix[3][0] = sum_x
+        matrix[3][1] = sum_y
+        matrix[3][2] = sum_z
+        matrix[3][3] = float(len(self.point_list))
+
+        matrix = numpy.array(matrix)
+        
+        w, v = numpy.linalg.eig(matrix)
+        
+        j = -1
+        smallest_value = None
+        for i in range(4):
+            value = w[i]
+            if smallest_value is None or abs(value) < abs(smallest_value):
+                smallest_value = value
+                j = i
+        
+        unit_normal = Vector(v[0][j], v[1][j], v[2][j]).normalized()
+        center = -v[3][j] * unit_normal
+        
+        plane = Plane(center, unit_normal)
+        return plane
+
+    def render(self):
+        from OpenGL.GL import GL_POINTS, glBegin, glEnd, glVertex3f
+
+        glBegin(GL_POINTS)
+        try:
+            for point in self.point_list:
+                glVertex3f(point.x, point.y, point.z)
+        except Exception as ex:
+            error = str(ex)
+            error = None
+        finally:
+            glEnd()

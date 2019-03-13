@@ -65,7 +65,7 @@ class Matrix3x3(object):
                 if row != i and col != j:
                     element_list.append(self.elements[row][col])
         det = element_list[0] * element_list[3] - element_list[1] * element_list[2]
-        if i + j % 2 == 1:
+        if (i + j) % 2 == 1:
             det *= -1.0
         return det
 
@@ -155,17 +155,16 @@ class Matrix3x3(object):
         return matrix_str
 
 if __name__ == '__main__':
-    from math3d_vector import Vector
     matrix = Matrix3x3()
-    matrix.elements[0][0] = 2.0
-    matrix.elements[0][1] = 3.0
-    matrix.elements[0][2] = -4.0
-    matrix.elements[1][0] = -2.0
-    matrix.elements[1][1] = 5.0
-    matrix.elements[1][2] = -5.0
-    matrix.elements[2][0] = -2.0
-    matrix.elements[2][1] = -3.0
-    matrix.elements[2][2] = -4.0
+    matrix.elements[0][0] = 3.0
+    matrix.elements[0][1] = 0.0
+    matrix.elements[0][2] = 2.0
+    matrix.elements[1][0] = 2.0
+    matrix.elements[1][1] = 0.0
+    matrix.elements[1][2] = -2.0
+    matrix.elements[2][0] = 0.0
+    matrix.elements[2][1] = 1.0
+    matrix.elements[2][2] = 1.0
     print(matrix)
     inv_matrix = matrix.calc_inverse()
     print(inv_matrix)

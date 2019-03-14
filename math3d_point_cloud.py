@@ -174,8 +174,10 @@ class PointCloud(object):
                 smallest_value = value
                 j = i
         
-        unit_normal = Vector(v[0][j], v[1][j], v[2][j]).normalized()
-        center = -v[3][j] * unit_normal
+        normal = Vector(v[0][j], v[1][j], v[2][j])
+        length = normal.length()
+        unit_normal = normal / length
+        center = -(v[3][j] / length) * unit_normal
         
         plane = Plane(center, unit_normal)
         return plane

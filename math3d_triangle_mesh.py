@@ -174,6 +174,19 @@ class TriangleMesh(object):
             point_cloud.add_point(triangle.calc_center())
         return point_cloud.calc_center()
     
+    def calc_vertex_normals(self):
+        normal_list = []
+        for i, vertex in enumerate(self.vertex_list):
+            normal = Vector(0.0, 0.0, 0.0)
+            for triple in self.triangle_list:
+                if any([triple[j] == i for j in range(3)]):
+                    triangle = self.make_triangle(triple)
+                    plane = triangle.calc_plane()
+                    normal += plane.unit_normal
+            normal = normal.normalized()
+            normal_list.append(normal)
+        return normal_list
+    
     @staticmethod
     def make_polyhedron(polyhedron):
         from math3d_point_cloud import PointCloud

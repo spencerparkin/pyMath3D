@@ -183,11 +183,14 @@ class TriangleMesh(object):
                     triangle = self.make_triangle(triple)
                     try:
                         plane = triangle.calc_plane()
-                    except:
-                        pass
+                    except Exception as ex:
+                        error = str(ex)
+                        error = None
                     else:
                         normal += plane.unit_normal
             normal = normal.normalized()
+            if normal is None:
+                normal = Vector(1.0, 0.0, 0.0)
             normal_list.append(normal)
         return normal_list
     

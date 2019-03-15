@@ -181,8 +181,12 @@ class TriangleMesh(object):
             for triple in self.triangle_list:
                 if any([triple[j] == i for j in range(3)]):
                     triangle = self.make_triangle(triple)
-                    plane = triangle.calc_plane()
-                    normal += plane.unit_normal
+                    try:
+                        plane = triangle.calc_plane()
+                    except:
+                        pass
+                    else:
+                        normal += plane.unit_normal
             normal = normal.normalized()
             normal_list.append(normal)
         return normal_list

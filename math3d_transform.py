@@ -77,6 +77,12 @@ class LinearTransform(Transform):
         self.z_axis = Vector(0.0, 0.0, z_scale)
         return self
     
+    def make_frame(self, z_axis):
+        self.z_axis = z_axis.normalized()
+        self.x_axis = self.z_axis.perpendicular_vector().normalized()
+        self.y_axis = self.z_axis.cross(self.x_axis)
+        return self
+    
     def calc_inverse(self):
         from math3d_matrix import Matrix3x3
         matrix = Matrix3x3()
@@ -145,6 +151,11 @@ class AffineTransform(Transform):
             center = Vector(0.0, 0.0, 0.0)
         self.linear_transform.make_rotation(axis, angle)
         self.translation = self.linear_transform(-center) + center
+        return self
+
+    def make_frame(self, z_axis, translation=None):
+        self.linear_transform.make_frame(z_axis)
+        self.translation = translation.clone() if translation is not None else Vector(0.0, 0.0, 0.0)
         return self
 
     def calc_inverse(self):

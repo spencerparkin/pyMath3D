@@ -1,5 +1,7 @@
 # math3d_line_segment.py
 
+import math
+
 from math3d_line import Line
 
 class LineSegment(object):
@@ -28,3 +30,15 @@ class LineSegment(object):
             return False
         alpha = self.inverse_lerp(point)
         return -eps < alpha < 1.0 + eps
+    
+    def point_distance(self, point):
+        spine = self.point_b - self.point_a
+        unit_normal = spine.normalized()
+        vector = point - self.point_b
+        length = vector.dot(unit_normal)
+        if length <= 0.0:
+            return (point - self.point_a).length()
+        elif length >= spine.length():
+            return (point - self.point_b).length()
+        hypotenuse = vector.length()
+        return math.sqrt(hypotenuse * hypotenuse - length * length)

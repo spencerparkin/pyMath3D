@@ -167,17 +167,26 @@ class PointCloud(object):
         w, v = numpy.linalg.eig(matrix)
         
         j = -1
+        eps = 1e-5
         smallest_value = None
         for i in range(4):
             value = w[i]
+            if isinstance(value, complex):
+                if abs(value.imag) > eps:
+                    continue    # Only consider real eigen values.
+                value = value.real
             if smallest_value is None or abs(value) < abs(smallest_value):
                 smallest_value = value
                 j = i
         
         normal = Vector(v[0][j], v[1][j], v[2][j])
+        normal.x = normal.x.real if isinstance(normal.x, complex) else normal.x
+        normal.y = normal.y.real if isinstance(normal.y, complex) else normal.y
+        normal.z = normal.z.real if isinstance(normal.z, complex) else normal.z
         length = normal.length()
         unit_normal = normal / length
-        center = -(v[3][j] / length) * unit_normal
+        alpha = v[3][j].real if isinstance(v[3][j], complex) else v[3][j]
+        center = -(alpha / length) * unit_normal
         
         plane = Plane(center, unit_normal)
         return plane

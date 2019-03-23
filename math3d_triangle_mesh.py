@@ -13,7 +13,7 @@ class Polyhedron:
     DODECAHEDRON = 3
     ICOSIDODECAHEDRON = 4
     TRUNCATED_TETRAHEDRON = 5
-    TRUNCATED_TETRAHEDRON = 6
+    TRUNCATED_OCTAHEDRON = 6
 
 class TriangleMesh(object):
     def __init__(self, mesh=None):

@@ -84,6 +84,13 @@ class TriangleMesh(object):
                 self.find_or_add_vertex(triangle.point_c)
             )
             self.triangle_list.append(new_triangle)
+        return self
+    
+    def add_quad(self, v0, v1, v2, v3):
+        # Vertices need to be wound CCW.
+        self.add_triangle(Triangle(v0, v1, v2))
+        self.add_triangle(Triangle(v0, v2, v3))
+        return self
     
     def find_triangle(self, triangle, check_forward=True, check_reverse=False):
         triple_list = []

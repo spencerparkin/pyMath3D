@@ -5,6 +5,7 @@ import math
 from math3d_side import Side
 from math3d_triangle import Triangle
 from math3d_vector import Vector
+from math3d_line_segment import LineSegment
 
 class Polyhedron:
     TETRAHEDRON = 0
@@ -123,10 +124,17 @@ class TriangleMesh(object):
         elif isinstance(triangle, int):
             return self.make_triangle(self.triangle_list[triangle])
     
-    def find_or_add_vertex(self, new_point, eps=1e-7):
+    def find_vertex(self, given_point, eps=1e-7):
+        # TODO: If a BSP tree was available, using that would speed this up considerably.
+        #       Instead of a linear search, here we would have a logarithmic one.
         for i, point in enumerate(self.vertex_list):
-            if (point - new_point).length() < eps:
+            if (point - given_point).length() < eps:
                 return i
+    
+    def find_or_add_vertex(self, new_point, eps=1e-7):
+        i = self.find_vertex(new_point, eps=eps)
+        if i is not None:
+            return i
         self.vertex_list.append(new_point)
         return len(self.vertex_list) - 1
     
@@ -143,6 +151,7 @@ class TriangleMesh(object):
     
     def split_against_mesh(self, tri_mesh):
         # The given mesh must be a convex shape.  If not, the result is left undefined.
+        # The caller might want to reduce/normalize the returned meshes for efficiency purposes.
         back_mesh_list = []
         front_mesh_list = []
 
@@ -299,80 +308,110 @@ class TriangleMesh(object):
     def find_boundary_loops(self):
         # If the mesh is not a typical manifold, the results of this function are undefined.
         # The topology of the manifold shouldn't matter.
-        
-        # Generate a map of all bare edges.
-        edge_map = {}
-        for triple in self.triangle_list:
-            for i in range(3):
-                edge = (i, (i + 1) % 3)
-                edge = (triple[edge[0]], triple[edge[1]])
-                edge_key = '%d|%d' % edge if edge[0] <= edge[1] else '%d|%d' % (edge[1], edge[0])
-                if edge_key not in edge_map:
-                    edge_map[edge_key] = edge
-                else:
-                    del edge_map[edge_key]
-        
-        # Generate a map we can use to follow the edges sequentially.
-        # This should work due to consistent winding of the triangles in the mesh.
-        vertex_map = {}
-        for edge_key in edge_map:
-            edge = edge_map[edge_key]
-            vertex_map[edge[0]] = edge[1]
+
+        # The correctness of our algorithm here depends on the mesh being normalized.
+        self.normalize()
+
+        line_loop_list = []
+
+        def expand_line_loop():
+            for i in range(len(line_loop)):
+                for triangle in triangle_queue:
+                    for j in range(3):
+                        if all([line_loop[(i + k) % len(line_loop)] == triangle[(j + 2 - k) % 3] for k in range(3)]):
+                            del line_loop[(i + 1) % len(line_loop)]
+                            triangle_queue.remove(triangle)
+                            return True
             
-        # Now go read-off all the loops.
-        loop_list = []
-        while len(vertex_map) > 0:
-            vertex_list = []
-            vertex = list(vertex_map.keys())[0]
-            while len(vertex_list) == 0 or vertex_list[0] != vertex:
-                vertex_list.append(vertex)
-                try:
-                    new_vertex = vertex_map[vertex]
-                except KeyError:
-                    break
-                del vertex_map[vertex]
-                vertex = new_vertex
-            loop_list.append(vertex_list)
+            for i in range(len(line_loop)):
+                for triangle in triangle_queue:
+                    for j in range(3):
+                        if all([line_loop[(i + k) % len(line_loop)] == triangle[(j + 1 - k) % 3] for k in range(2)]):
+                            line_loop.insert(i + 1, triangle[(j + 2) % 3])
+                            triangle_queue.remove(triangle)
+                            return True
         
-        # Finally, return the list of loops.
-        return loop_list
-    
-    def reduce_vertices(self, eps=0.05):
+        triangle_queue = [triangle for triangle in self.triangle_list]
+        while len(triangle_queue) > 0:
+            triangle = triangle_queue.pop()
+            line_loop = [triangle[0], triangle[1], triangle[2]]
+            while expand_line_loop():
+                pass
+            line_loop_list.append(line_loop)
+        
+        return line_loop_list
+
+    def remove_degenerate_triangles(self, eps=1e-7):
+        count = 0
         while True:
-            i, j = self.find_point_pair_within_distance(eps)
-            if i is None or j is None:
-                break
-            
-            point_a = self.vertex_list[i]
-            point_b = self.vertex_list[j]
-            mid_point = (point_a + point_b) / 2.0
-            self.vertex_list.append(mid_point)
-            
-            for k, triple in enumerate(self.triangle_list):
-                self.triangle_list[k] = [triple[0], triple[1], triple[2]]
-            
             for triple in self.triangle_list:
-                for k in range(3):
-                    if triple[k] == i or triple[k] == j:
-                        triple[k] = len(self.vertex_list) - 1
-            
-            k = 0
-            while k < len(self.triangle_list):
-                triple = self.triangle_list[k]
-                triple_set = {q for q in triple}
-                if len(triple_set) < 3:
-                    del self.triangle_list[k]
-                else:
-                    k += 1
-            
-            triangle_list = self.to_triangle_list()
-            self.from_triangle_list(triangle_list)
+                triangle = self.make_triangle(triple)
+                if triangle.area() < eps:
+                    self.triangle_list.remove(triple)
+                    count += 1
+                    break
+            else:
+                break
+        return count
+    
+    def normalize(self, eps=1e-7):
+        # The goal here is to find a mesh representing the exact same set of points in space,
+        # but having the property that no vertex of the mesh is contained on an edge of a triangle
+        # in the mesh and not on an end-point of that edge.
         
-    def find_point_pair_within_distance(self, distance):
-        for i in range(len(self.vertex_list)):
-            point_a = self.vertex_list[i]
-            for j in range(i + 1, len(self.vertex_list)):
-                point_b = self.vertex_list[j]
-                if (point_a - point_b).length() <= distance:
-                    return i, j
-        return None, None
+        # Note that reduction is not necessary for the correctness of this algorithm, but 1) sometimes
+        # it is enough to normalize the mesh, and 2) it may significantly reduce the size of the mesh.
+        self.reduce(eps=eps)
+
+        def split_triangle():
+            for triple in self.triangle_list:
+                triangle = self.make_triangle(triple)
+                for i in range(3):
+                    edge = LineSegment(point_a=triangle[i], point_b=triangle[i + 1])
+                    for j, vertex in enumerate(self.vertex_list):
+                        if (vertex - edge.point_a).length() < eps:
+                            continue
+                        if (vertex - edge.point_b).length() < eps:
+                            continue
+                        if not edge.contains_point(vertex, eps=eps):
+                            continue
+                        self.triangle_list.remove(triple)
+                        self.triangle_list.append((j, triple[(i + 2) % 3], triple[i]))
+                        self.triangle_list.append((j, triple[(i + 1) % 3], triple[(i + 2) % 3]))
+                        return True
+
+        while split_triangle():
+            pass
+    
+    def reduce(self, eps=1e-7):
+        def merge_triangles():
+            for triangle_a in self.triangle_list:
+                for triangle_b in self.triangle_list:
+                    if triangle_a is triangle_b:
+                        continue
+                    for i in range(3):
+                        for j in range(3):
+                            if triangle_a[(i + 1) % 3] == triangle_b[(j + 2) % 3] and triangle_a[(i + 2) % 3] == triangle_b[(j + 1) % 3]:
+                                vector_a = self.vertex_list[triangle_a[i]] - self.vertex_list[triangle_a[(i + 2) % 3]]
+                                vector_b = self.vertex_list[triangle_b[j]] - self.vertex_list[triangle_b[(j + 1) % 3]]
+                                if math.fabs(vector_a.angle_between(vector_b) - math.pi) < eps:
+                                    self.triangle_list.remove(triangle_a)
+                                    self.triangle_list.remove(triangle_b)
+                                    self.triangle_list.append((triangle_a[i], triangle_a[(i + 1) % 3], triangle_b[j]))
+                                    return True
+                                vector_a = self.vertex_list[triangle_a[i]] - self.vertex_list[triangle_a[(i + 1) % 3]]
+                                vector_b = self.vertex_list[triangle_b[j]] - self.vertex_list[triangle_b[(j + 2) % 3]]
+                                if math.fabs(vector_a.angle_between(vector_b) - math.pi) < eps:
+                                    self.triangle_list.remove(triangle_a)
+                                    self.triangle_list.remove(triangle_b)
+                                    self.triangle_list.append((triangle_b[j], triangle_b[(j + 1) % 3], triangle_a[i]))
+                                    return True
+        
+        while merge_triangles():
+            self.remove_degenerate_triangles()
+        
+        self.remove_unused_vertices()
+    
+    def remove_unused_vertices(self):
+        triangle_list = self.to_triangle_list()
+        self.from_triangle_list(triangle_list)

@@ -19,7 +19,12 @@ class LineSegment(object):
         return self.point_a * (1.0 - alpha) + self.point_b * alpha
 
     def inverse_lerp(self, point):
-        pass
+        try:
+            vector = self.point_b - self.point_a
+            alpha = (point - self.point_a).dot(vector) / vector.dot(vector)
+            return alpha
+        except ZeroDivisionError:
+            return None
 
     def calc_line(self):
         unit_normal = (self.point_b - self.point_a).normalized()

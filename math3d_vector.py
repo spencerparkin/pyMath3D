@@ -81,7 +81,9 @@ class Vector(object):
         return self - self.projected(unit_normal)
 
     def angle_between(self, other):
-        return math.acos(self.normalized().dot(other.normalized()))
+        dot = self.normalized().dot(other.normalized())
+        dot = max(min(dot, 1.0), -1.0)
+        return math.acos(dot)
 
     def rotated(self, unit_axis, angle):
         projection = self.projected(unit_axis)

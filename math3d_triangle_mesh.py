@@ -274,14 +274,17 @@ class TriangleMesh(object):
             total += triangle.area()
         return total
 
-    def render(self):
-        from OpenGL.GL import GL_TRIANGLES, glBegin, glEnd, glVertex3f, glNormal3f
+    def render(self, random_colors=False):
+        from OpenGL.GL import GL_TRIANGLES, glBegin, glEnd, glVertex3f, glNormal3f, glColor3f
         
         glBegin(GL_TRIANGLES)
         try:
             for triangle in self.yield_triangles():
                 plane = triangle.calc_plane()
                 glNormal3f(plane.unit_normal.x, plane.unit_normal.y, plane.unit_normal.z)
+                if random_colors:
+                    color = Vector().random()
+                    glColor3f(color.x, color.y, color.z)
                 glVertex3f(triangle.point_a.x, triangle.point_a.y, triangle.point_a.z)
                 glVertex3f(triangle.point_b.x, triangle.point_b.y, triangle.point_b.z)
                 glVertex3f(triangle.point_c.x, triangle.point_c.y, triangle.point_c.z)
@@ -380,7 +383,7 @@ class TriangleMesh(object):
                         self.triangle_list.append((j, triple[(i + 1) % 3], triple[(i + 2) % 3]))
                         return True
 
-        while split_triangle():
+        while self.remove_degenerate_triangles() > 0 or split_triangle():
             pass
     
     def reduce(self, eps=1e-7):
@@ -407,8 +410,8 @@ class TriangleMesh(object):
                                     self.triangle_list.append((triangle_b[j], triangle_b[(j + 1) % 3], triangle_a[i]))
                                     return True
         
-        while merge_triangles():
-            self.remove_degenerate_triangles()
+        while merge_triangles() or self.remove_degenerate_triangles() > 0:
+            pass
         
         self.remove_unused_vertices()
     

@@ -349,7 +349,8 @@ class TriangleMesh(object):
         while True:
             for triple in self.triangle_list:
                 triangle = self.make_triangle(triple)
-                if triangle.area() < eps:
+                area = triangle.area()
+                if area < eps:
                     self.triangle_list.remove(triple)
                     count += 1
                     break
@@ -366,7 +367,9 @@ class TriangleMesh(object):
         # it is enough to normalize the mesh, and 2) it may significantly reduce the size of the mesh.
         self.reduce(eps=eps)
 
-        def split_triangle():
+        min_area = {'area': 1e-7}
+
+        def split_triangle(min_area):
             for triple in self.triangle_list:
                 triangle = self.make_triangle(triple)
                 for i in range(3):
@@ -381,9 +384,11 @@ class TriangleMesh(object):
                         self.triangle_list.remove(triple)
                         self.triangle_list.append((j, triple[(i + 2) % 3], triple[i]))
                         self.triangle_list.append((j, triple[(i + 1) % 3], triple[(i + 2) % 3]))
+                        min_area['area'] = min(self.make_triangle(self.triangle_list[-2]).area(), min_area['area'])
+                        min_area['area'] = min(self.make_triangle(self.triangle_list[-1]).area(), min_area['area'])
                         return True
 
-        while self.remove_degenerate_triangles() > 0 or split_triangle():
+        while self.remove_degenerate_triangles(eps=min_area['area']) > 0 or split_triangle(min_area):
             pass
     
     def reduce(self, eps=1e-7):
@@ -410,7 +415,7 @@ class TriangleMesh(object):
                                     self.triangle_list.append((triangle_b[j], triangle_b[(j + 1) % 3], triangle_a[i]))
                                     return True
         
-        while merge_triangles() or self.remove_degenerate_triangles() > 0:
+        while self.remove_degenerate_triangles() > 0 or merge_triangles():
             pass
         
         self.remove_unused_vertices()

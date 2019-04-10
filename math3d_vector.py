@@ -133,3 +133,6 @@ class Vector(object):
         self.y = random.uniform(min_value, max_value)
         self.z = random.uniform(min_value, max_value)
         return self
+
+    def is_vector(self, vector, eps=1e-7):
+        return True if (self - vector).length() < eps else False

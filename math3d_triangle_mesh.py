@@ -342,6 +342,46 @@ class TriangleMesh(object):
                 pass
             line_loop_list.append(line_loop)
         
+        # Each island of the mesh now has a line-loop, but each island may
+        # also have zero or more holes in it.  So the last step is to possibly
+        # break up each line-loop we have so far generated.
+        line_loop_queue = line_loop_list
+        line_loop_list = []
+        while len(line_loop_queue) > 0:
+            line_loop = line_loop_queue.pop()
+            overlap = False
+            count_map = {}
+            for i in line_loop:
+                if i in count_map:
+                    count_map[i] += 1
+                    overlap = True
+                else:
+                    count_map[i] = 1
+            if not overlap:
+                if len(line_loop) > 2:
+                    line_loop_list.append(line_loop)
+            else:
+                for i in range(len(line_loop)):
+                    if count_map[line_loop[i]] > 1 and count_map[line_loop[(i + 1) % len(line_loop)]] == 1:
+                        break
+                else:
+                    continue
+                j = (i + 1) % len(line_loop)
+                while not (count_map[line_loop[j]] > 1 and count_map[line_loop[(j - 1) % len(line_loop)]] == 1):
+                    j = (j + 1) % len(line_loop)
+                if line_loop[i] == line_loop[j]:
+                    line_loop_a = []
+                    line_loop_b = []
+                    k = i
+                    while k != j:
+                        line_loop_a.append(line_loop[k])
+                        k = (k + 1) % len(line_loop)
+                    while k != i:
+                        line_loop_b.append(line_loop[k])
+                        k = (k + 1) % len(line_loop)
+                    line_loop_queue.append(line_loop_a)
+                    line_loop_queue.append(line_loop_b)
+            
         return line_loop_list
 
     def remove_degenerate_triangles(self, eps=1e-7):

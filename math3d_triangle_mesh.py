@@ -107,7 +107,20 @@ class TriangleMesh(object):
                     return i
                 if existing_triangle == (triple[2], triple[0], triple[1]):
                     return i
-    
+
+    def find_adjacent_triangles(self, triangle):
+        adjacent_triangles_list = []
+        for existing_triangle in self.triangle_list:
+            if existing_triangle == triangle:
+                continue
+            for i in range(3):
+                edge_a = (triangle[i], triangle[(i + 1) % 3])
+                for j in range(3):
+                    edge_b = (existing_triangle[j], existing_triangle[(j - 1) % 3])
+                    if edge_a == edge_b:
+                        adjacent_triangles_list.append((existing_triangle, (j - 2) % 3))
+        return adjacent_triangles_list
+
     def toggle_triangle(self, triangle, check_forward=True, check_reverse=False):
         i = self.find_triangle(triangle, check_forward=check_forward, check_reverse=check_reverse)
         if i is not None:

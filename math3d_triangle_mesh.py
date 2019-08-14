@@ -165,6 +165,13 @@ class TriangleMesh(object):
     def split_against_mesh(self, tri_mesh):
         # The given mesh must be a convex shape.  If not, the result is left undefined.
         # The caller might want to reduce/normalize the returned meshes for efficiency purposes.
+        # NOTE: Long after writing this routine, I ran across the following article...
+        #       https://www.researchgate.net/publication/220721659_Set_operation_on_polyhedra_using_binary_space_partitioning_trees
+        #       This paper suggests that here in this routine we could overcome the limitation of
+        #       requiring a convex cut-shape by being passed-in instead the BSP-tree representation
+        #       of the cut-shape.  This helps us solve the classification problem for non-convex shapes,
+        #       which is part of the underlying problem being solved for the algorithm naively implemented here.
+        #       There's surely more to it than just that, but anyhow, it's worth noting if I ever return to this code.
         back_mesh_list = []
         front_mesh_list = []
 

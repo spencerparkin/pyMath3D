@@ -31,6 +31,10 @@ class PointCloud(object):
         center = center * (1.0 / float(len(self.point_list)))
         return center
 
+    def scale_about_center(self, scale):
+        center = self.calc_center()
+        self.point_list = [center + (point - center) * scale for point in self.point_list]
+
     def add_point(self, new_point, eps=1e-7):
         for point in self.point_list:
             if (point - new_point).length() < eps:

@@ -73,7 +73,11 @@ class TriangleMesh(object):
         for triangle in triangle_list:
             self.add_triangle(triangle)
         return self
-    
+
+    def add_triangle_list(self, triangle_list):
+        for triangle in triangle_list:
+            self.add_triangle(triangle)
+
     def add_triangle(self, triangle):
         if isinstance(triangle, tuple):
             assert(all([self.valid_offset(triangle[i]) for i in range(3)]))
@@ -110,7 +114,7 @@ class TriangleMesh(object):
 
     def find_adjacent_triangles(self, triangle):
         adjacent_triangles_list = []
-        for existing_triangle in self.triangle_list:
+        for offset, existing_triangle in enumerate(self.triangle_list):
             if existing_triangle == triangle:
                 continue
             for i in range(3):
@@ -118,7 +122,7 @@ class TriangleMesh(object):
                 for j in range(3):
                     edge_b = (existing_triangle[j], existing_triangle[(j - 1) % 3])
                     if edge_a == edge_b:
-                        adjacent_triangles_list.append((existing_triangle, (j - 2) % 3))
+                        adjacent_triangles_list.append((existing_triangle, (j - 2) % 3, offset))
         return adjacent_triangles_list
 
     def toggle_triangle(self, triangle, check_forward=True, check_reverse=False):
@@ -161,7 +165,40 @@ class TriangleMesh(object):
                     return Side.FRONT
             # It could also be on the mesh, but let's just do this for now.
             return Side.BACK
-    
+
+    def split_into_connected_parts(self):
+        # The correctness of this algorithm depends on the mesh being normalized.
+        triangle_mesh_list = []
+        visited_triangle_set = set()
+
+        while True:
+
+            # Can we find a triangle we have yet to visit?
+            queue = []
+            for i in range(len(self.triangle_list)):
+                if i not in visited_triangle_set:
+                    queue = [i]
+                    break
+
+            # If no such triangle exists, we're done.
+            if len(queue) == 0:
+                break
+
+            # Otherwise, perform a DFS starting at the found triangle.
+            triangle_mesh = TriangleMesh()
+            triangle_mesh_list.append(triangle_mesh)
+            while len(queue) > 0:
+                i = queue.pop()
+                visited_triangle_set.add(i)
+                triangle_mesh.add_triangle(self.make_triangle(i))
+                adjacent_triangle_list = self.find_adjacent_triangles(self.triangle_list[i])
+                for adjacent_triangle in adjacent_triangle_list:
+                    i = adjacent_triangle[2]
+                    if i not in queue and i not in visited_triangle_set:
+                        queue.append(i)
+
+        return triangle_mesh_list
+
     def split_against_mesh(self, tri_mesh):
         # The given mesh must be a convex shape.  If not, the result is left undefined.
         # The caller might want to reduce/normalize the returned meshes for efficiency purposes.

@@ -4,9 +4,14 @@ from math3d_side import Side
 from math3d_vector import Vector
 
 class Plane(object):
-    def __init__(self, center, unit_normal):
-        self.center = center.projected(unit_normal)
-        self.unit_normal = unit_normal.clone()
+    def __init__(self, center, normal):
+        self.center = center.clone()
+        self.unit_normal = normal.clone()
+        self.normalize()
+
+    def normalize(self):
+        self.unit_normal = self.unit_normal.normalized()
+        self.center = self.center.projected(self.unit_normal)
 
     def clone(self):
         return Plane(self.center, self.unit_normal)
@@ -22,6 +27,15 @@ class Plane(object):
         self.center = Vector().from_dict(data.get('center', {}))
         self.unit_normal = Vector().from_dict(data.get('unit_normal', {}))
         return self
+
+    def is_plane(self, plane, eps=1e-7):
+        self.normalize()
+        plane.normalize()
+        if not self.center.is_vector(plane.center, eps):
+            return False
+        if not self.unit_normal.is_vector(plane.unit_normal, eps):
+            return False
+        return True
 
     def contains_point(self, point, eps=1e-7):
         return Side.NEITHER == self.side(point, eps)
